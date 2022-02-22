@@ -12,6 +12,7 @@ setup(
     url='https://github.com/mugiseyebrows/mugi-cli',
     description='Shell utilities resembling coreutils and findutils, small extendable and windows-friendly',
     long_description = long_description,
+    long_description_content_type = 'text/markdown',
     install_requires = ['python-dateutil'],
     entry_points={
         'console_scripts': [
