@@ -30,6 +30,8 @@ setup(
             'pyextstat = mugicli.pyextstat:main',
             'pyzip = mugicli.pyzip:main',
             'pystart = mugicli.pystart:main',
+            'pycat = mugicli.pycat:main',
+            'pyecho = mugicli.pyecho:main',
         ]
     },
 )

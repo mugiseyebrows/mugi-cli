@@ -2,17 +2,11 @@ import sys
 import re
 import subprocess
 from .shared import eprint, run, parse_args
-import textwrap
+from . import read_stdin_text
 
 def read_stdin_args():
-    data = sys.stdin.buffer.read()
-    try:
-        text = data.decode('utf-8')
-    except UnicodeDecodeError:
-        text = data.decode(sys.stdin.encoding)
-    args = []
-    for line in text.split('\n'):
-        args.append(line.strip())
+    text = read_stdin_text()
+    args = [line for line in [line.strip() for line in text.split('\n')] if line != '']
     return args
 
 def is_int(s):
