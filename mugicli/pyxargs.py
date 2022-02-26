@@ -3,6 +3,7 @@ import re
 import subprocess
 from .shared import eprint, run, parse_args
 from . import read_stdin_text
+import textwrap
 
 def read_stdin_args():
     text = read_stdin_text()
