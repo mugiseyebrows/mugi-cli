@@ -32,6 +32,9 @@ setup(
             'pystart = mugicli.pystart:main',
             'pycat = mugicli.pycat:main',
             'pyecho = mugicli.pyecho:main',
+            'pymtime = mugicli.pymtime:main',
+            'pysort = mugicli.pysort:main',
+            'pycol = mugicli.pycol:main',
         ]
     },
 )
