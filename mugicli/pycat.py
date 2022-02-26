@@ -8,7 +8,7 @@ import sys
 from .shared import glob_paths, eprint
 
 def main():
-    parser = argparse.ArgumentParser(description='prints file to')
+    parser = argparse.ArgumentParser(description='prints file to stdout')
     parser.add_argument('path', nargs='+')
     parser.add_argument('--text', '-t', action='store_true')
 

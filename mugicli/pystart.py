@@ -20,7 +20,7 @@ def find_explorer():
         return path
 
 def main():
-    parser = argparse.ArgumentParser(description='open file in associated application or directory in explorer')
+    parser = argparse.ArgumentParser(description='opens file in associated application or directory in explorer')
     parser.add_argument('path', nargs='+', help='paths to start')
     parser.add_argument('--show', action='store_true')
     args = parser.parse_args()

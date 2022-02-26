@@ -20,6 +20,34 @@ You can use this package to avoid bash and powershell and still have decent shel
 
 # Applications
 
+## pycat
+```
+usage: pycat.py [-h] [--text] path [path ...]
+
+prints file to stdout
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --text, -t
+
+```
+## pycol
+```
+usage: pycol.py [-h] [-n N [N ...]] [path ...]
+
+extracts and prints specific columns
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help    show this help message and exit
+  -n N [N ...]
+
+```
 ## pydu
 ```
 usage: pydu.py [-s] [-h] [--help] [path ...]
@@ -35,18 +63,29 @@ optional arguments:
   --help
 
 ```
+## pyecho
+```
+usage: pyecho [-e] [-n] [args...]
+
+prints text to stdout
+
+optional arguments:
+-h --help  show this message and exit
+-e         decode escape sequences
+-n         do not print newline
+
+
+```
 ## pyextstat
 ```
-usage: pyextstat.py [-h] [-s] [paths ...]
-
-prints extension statistics
+usage: pyextstat.py [-h] [-s] [path ...]
 
 positional arguments:
-  paths        paths
+  path         paths
 
 optional arguments:
   -h, --help   show this help message and exit
-  -s, --short  short statistics
+  -s, --short
 
 ```
 ## pyfind
@@ -117,6 +156,19 @@ optional arguments:
   -n N        number of lines to print
 
 ```
+## pymtime
+```
+usage: pymtime.py [-h] [path ...]
+
+prints mtime of file
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
 ## pymtimestat
 ```
 usage: pymtimestat.py [-h] [-r RECENT] [-o OLD] [-a AVERAGE]
@@ -155,6 +207,24 @@ positional arguments:
 optional arguments:
   -h, --help  show this help message and exit
   -e E        expression
+
+```
+## pysort
+```
+usage: pysort.py [-h] [--numeric-sort] [--reverse] [--random-sort] [--unique]
+                 [path ...]
+
+sorts lines
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help          show this help message and exit
+  --numeric-sort, -n
+  --reverse, -r
+  --random-sort, -R
+  --unique, -u
 
 ```
 ## pystart
@@ -246,7 +316,7 @@ usage: pyzip.py [-h] [-o OUTPUT] {a,x,l} zip [sources ...]
 appends, extracts and list contents of zip archive
 
 positional arguments:
-  {a,x,l}
+  {a,x,l}               add extract list
   zip
   sources
 

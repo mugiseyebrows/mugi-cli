@@ -4,7 +4,7 @@ from .shared import glob_paths_dirs
 from . import read_stdin_text
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='prints file extension statistics')
     parser.add_argument("path", nargs="*", help="paths")
     parser.add_argument('-s', '--short', action='store_true')
 
