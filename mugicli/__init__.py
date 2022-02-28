@@ -1,6 +1,8 @@
 import sys
 import re
 from .shared import glob_paths, glob_paths_files, read_bytes, print_bytes
+import argparse
+import hashlib
 
 def read_stdin_text():
     data = sys.stdin.buffer.read()
@@ -59,3 +61,25 @@ def convertlineterm(to_what):
             bytes_ = read_bytes(path)
             with open(path, 'wb') as f:
                 f.write(bytes_.replace(subj, repl))
+
+
+def files_hash(paths, from_stdin, alg):
+    if from_stdin:
+        hash = hashlib.new(alg)
+        hash.update(sys.stdin.buffer.read())
+        print(" ".join([hash.hexdigest(), "-"]))
+    else:
+        for path in paths:
+            with open(path, 'rb') as f:
+                hash = hashlib.new(alg)
+                hash.update(f.read())
+                print(" ".join([hash.hexdigest(), path]))
+
+def files_hash_main(alg):
+    parser = argparse.ArgumentParser(description='calculates {} hashsum of file'.format(alg))
+    parser.add_argument('path', nargs='*')
+    args = parser.parse_args()
+    from_stdin = len(args.path) == 0
+    paths = glob_paths_files(args.path)
+    files_hash(paths, from_stdin, alg)
+    
