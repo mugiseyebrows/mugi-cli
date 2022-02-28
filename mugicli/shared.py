@@ -179,17 +179,7 @@ def parse_args(short, long, short_val, long_val, args):
         args.pop(0)
     return opts, args
 
-def wild_to_regex(wild):
-    repl = {
-        '*': '.*',
-        '.': '\\.',
-        '?': '.'
-    }
-    pat = "".join(["^"] + [repl[c] if c in repl else c for c in wild] + ["$"])
-    return pat
-
-def wild_match(pattern, line, cs=False):
-    return re.compile(wild_to_regex(pattern), 0 if cs else re.IGNORECASE).match(line) is not None
-
-def print_utf8(s):
-    sys.stdout.buffer.write(s.encode('utf-8') + b'\n')
+def print_utf8(s, end=b'\n'):
+    if not isinstance(end, bytes):
+        end = end.encode('utf-8')
+    sys.stdout.buffer.write(s.encode('utf-8') + end)

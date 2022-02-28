@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from itertools import count
 import subprocess
 import shutil
-from .shared import eprint, run, wild_match, print_utf8
+import fnmatch
 
 class Tok:
     (
@@ -239,17 +239,8 @@ def pred_mmin(name, path, is_dir, arg, cache):
         return total_min < abs(arg)
     return total_min > arg
 
-def wild_to_regex(wild):
-    repl = {
-        '*': '.*',
-        '.': '\\.',
-        '?': '.'
-    }
-    pat = "".join(["^"] + [repl[c] if c in repl else c for c in wild] + ["$"])
-    return pat
-
 def pred_iname(name, path, is_dir, arg, cache):
-    return wild_match(arg, name)
+    return fnmatch.fnmatch(name, arg)
 
 def pred_type(name, path, is_dir, arg, cache):
     # todo validate type arg

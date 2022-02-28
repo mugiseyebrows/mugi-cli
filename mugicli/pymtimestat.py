@@ -2,9 +2,10 @@ import re
 import os
 import argparse
 
-from .shared import glob_paths, glob_paths_dirs, wild_match, wild_to_regex
+from .shared import glob_paths, glob_paths_dirs
 import datetime
 import json
+import fnmatch
 
 def median(vs):
     if len(vs) % 2:
@@ -28,16 +29,16 @@ def include_exclude(include, exclude, name):
         ok = True
     else:
         ok = False
-        for e in include:
-            if wild_match(e, name):
+        for pat in include:
+            if fnmatch.fnmatch(name, pat):
                 ok = True
     if not ok:
         return False
     if exclude is None:
         return True
     else:
-        for e in exclude:
-            if wild_match(e, name):
+        for pat in exclude:
+            if fnmatch.fnmatch(name, pat):
                 return False
     return True
 
