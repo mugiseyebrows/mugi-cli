@@ -2,7 +2,7 @@ import sys
 import re
 import subprocess
 from .shared import eprint, run, parse_args
-from . import read_stdin_text
+from . import read_stdin_text, chunks
 import textwrap
 
 def read_stdin_args():
@@ -17,11 +17,6 @@ def is_int(s):
     except Exception as e:
         pass
     return False
-
-def chunks(lst, n):
-    """Yield successive n-sized chunks from lst."""
-    for i in range(0, len(lst), n):
-        yield lst[i:i + n]
 
 def print_help():
     print(textwrap.dedent("""\
