@@ -4,7 +4,7 @@ from collections import defaultdict
 from .shared import glob_paths_files, read_lines, print_lines
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='prints unique or nonunique lines from sorted array of lines')
     parser.add_argument('--count', '-c', action='store_true')
     parser.add_argument('--repeated','-d',action='store_true')
     parser.add_argument('--unique','-u',action='store_true')
