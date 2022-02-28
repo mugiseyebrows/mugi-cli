@@ -1,5 +1,6 @@
 import sys
 import re
+from .shared import glob_paths, glob_paths_files, read_bytes, print_bytes
 
 def read_stdin_text():
     data = sys.stdin.buffer.read()
@@ -21,3 +22,40 @@ def parse_size(arg):
     size = float(m.group(1))
     prefix = m.group(2)
     return int(size * {'k': 1024, 'm': 1024 * 1024, 'g': 1024 * 1024 * 1024, 'c': 1, 'b': 512, '': 1}[prefix.lower()])
+
+import argparse
+
+(
+    TO_UNIX,
+    TO_DOS
+) = range(2)
+
+def convertlineterm(to_what):
+
+    description = {
+        TO_UNIX: 'converts line endings from dos to unix (\\r\\n -> \\n)',
+        TO_DOS: 'converts line endings from unix to dos (\\n -> \\r\\n)'
+    }[to_what]
+
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('path', nargs='*')
+    args = parser.parse_args()
+    paths = glob_paths_files(args.path)
+
+    stdin_mode = len(args.path) == 0
+
+    if to_what == TO_UNIX:
+        subj = b'\r\n'
+        repl = b'\n'
+    else:
+        subj = b'\n'
+        repl = b'\r\n'
+
+    if stdin_mode:
+        bytes_ = read_bytes(None)
+        print_bytes(bytes_.replace(subj, repl))
+    else:
+        for path in paths:
+            bytes_ = read_bytes(path)
+            with open(path, 'wb') as f:
+                f.write(bytes_.replace(subj, repl))
