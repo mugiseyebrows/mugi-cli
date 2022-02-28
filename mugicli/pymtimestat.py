@@ -76,9 +76,6 @@ def main():
         print("No files")
         exit(1)
 
-    with open("D:\\w\\out.json", 'w', encoding='utf-8') as f:
-        json.dump(stat[:5], f, ensure_ascii=False)
-
     mtime.sort()
 
     names = ['min', 'max', 'average', 'median']
