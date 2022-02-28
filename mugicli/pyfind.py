@@ -9,7 +9,9 @@ from dataclasses import dataclass
 from itertools import count
 import subprocess
 import shutil
+from .shared import eprint, run, print_utf8
 import fnmatch
+from . import parse_size
 
 class Tok:
     (
@@ -30,6 +32,7 @@ class Tok:
         newerct,
         arg,
         path,
+        ipath,
         mtime,
         ctime,
         size,
@@ -37,11 +40,11 @@ class Tok:
         delete,
         semicolon,
         pathbind,
-        icontains,
-        contains,
-        containsbin,
+        icont,
+        cont,
+        bcont,
         maxdepth,
-    ) = range(28)
+    ) = range(29)
     
 m = {
     "(": Tok.op_par,
@@ -68,10 +71,12 @@ m = {
     "-delete": Tok.delete,
     ";": Tok.semicolon,
     "{}": Tok.pathbind,
-    "-icontains": Tok.contains,
-    "-contains": Tok.contains,
-    "-containsbin": Tok.containsbin,
-    "-maxdepth": Tok.maxdepth
+    "-icont": Tok.icont,
+    "-cont": Tok.cont,
+    "-bcont": Tok.bcont,
+    "-path": Tok.path,
+    "-ipath": Tok.ipath,
+    "-maxdepth": Tok.maxdepth,
 }
 
 inv_m = {v:k for k,v in m.items()}
@@ -81,7 +86,8 @@ class T:
     type: int
     cont: str
 
-tok_pred = [Tok.mmin, Tok.iname, Tok.name, Tok.type, Tok.newer, Tok.newerct, Tok.newermt, Tok.mtime, Tok.ctime,  Tok.size, Tok.contains, Tok.icontains, Tok.containsbin]
+tok_pred = [Tok.mmin, Tok.iname, Tok.name, Tok.type, Tok.newer, 
+    Tok.newerct, Tok.newermt, Tok.mtime, Tok.ctime,  Tok.size, Tok.cont, Tok.icont, Tok.bcont, Tok.path, Tok.ipath]
 
 class Action:
     def __init__(self, tokens):
@@ -217,13 +223,11 @@ class Cache:
     def parse_size(self, arg):
         if arg not in self._parse_size:
             self._parse_size[arg] = None
-            try:
-                m = re.match('^([-+]?[0-9.e]+)+([cwbkmg]?)$', arg, re.IGNORECASE)
-                size = float(m.group(1))
-                prefix = m.group(2)
-                self._parse_size[arg] = size * {'k': 1024, 'm': 1024 * 1024, 'g': 1024 * 1024 * 1024, 'c': 1, 'b': 512, '': 1}[prefix.lower()]
-            except Exception as e:
-                eprint("Invalid size format {} {}".format(arg, repr(e)))
+            parsed = parse_size(arg)
+            if parsed is None:
+                eprint("Invalid size format {}".format(arg))
+            else:
+                self._parse_size[arg] = parsed
         return self._parse_size[arg]
 
     def now(self):
@@ -241,6 +245,12 @@ def pred_mmin(name, path, is_dir, arg, cache):
 
 def pred_iname(name, path, is_dir, arg, cache):
     return fnmatch.fnmatch(name, arg)
+
+def pred_ipath(name, path, is_dir, arg, cache):
+    return fnmatch.fnmatch(path, arg)
+
+def pred_path(name, path, is_dir, arg, cache):
+    return fnmatch.fnmatchcase(path, arg)
 
 def pred_type(name, path, is_dir, arg, cache):
     # todo validate type arg
@@ -287,31 +297,30 @@ def pred_size(name, path, is_dir, arg, cache):
         return size_path < abs(size_arg)
     return size_path > size_arg
 
-def pred_xcontains(name, path, is_dir, arg, cache, flags, bin):
+def pred_xcont(name, path, is_dir, arg, cache, flags, bin):
     if is_dir:
         return None
     try:
-        mode = 'rb' if bin else 'r'
-        encoding = None if bin else 'utf-8'
-        with open(path, mode, encoding=encoding) as f:
-            text = f.read()
+        with open(path, 'rb') as f:
+            data = f.read()
         if bin:
             arg = arg.encode("utf-8").decode('unicode_escape').encode("utf-8")
-            return arg in text
         else:
-            return re.search(arg, text, flags) is not None
+            arg = arg.encode("utf-8")
+        return re.search(arg, data, flags) is not None
+
     except Exception as e:
         eprint(e)
     return None
 
-def pred_icontains(name, path, is_dir, arg, cache):
-    return pred_xcontains(name, path, is_dir, arg, cache, re.IGNORECASE, False)
+def pred_icont(name, path, is_dir, arg, cache):
+    return pred_xcont(name, path, is_dir, arg, cache, re.IGNORECASE, False)
 
-def pred_contains(name, path, is_dir, arg, cache):
-    return pred_xcontains(name, path, is_dir, arg, cache, 0, False)
+def pred_cont(name, path, is_dir, arg, cache):
+    return pred_xcont(name, path, is_dir, arg, cache, 0, False)
 
-def pred_containsbin(name, path, is_dir, arg, cache):
-    return pred_xcontains(name, path, is_dir, arg, cache, 0, True)
+def pred_bcont(name, path, is_dir, arg, cache):
+    return pred_xcont(name, path, is_dir, arg, cache, 0, True)
 
 def max_level(tree):
     level = -1
@@ -480,9 +489,11 @@ class NodePred:
             Tok.ctime: pred_ctime,
             Tok.mtime: pred_mtime,
             Tok.size: pred_size,
-            Tok.contains: pred_contains,
-            Tok.icontains: pred_icontains,
-            Tok.containsbin: pred_containsbin,
+            Tok.cont: pred_cont,
+            Tok.icont: pred_icont,
+            Tok.bcont: pred_bcont,
+            Tok.path: pred_path,
+            Tok.ipath: pred_ipath,
         }[type_](name, path, is_dir, arg, cache)
 
         if res is None:
@@ -689,6 +700,11 @@ predicates:
   -newerct DATETIME    same as -newermt but when modified metadata not content
   -name PATTERN        filename matches PATTERN (wildcard)
   -iname PATTERN       same as -name but case insensitive
+  -path PATTERN        file path matches PATTERN
+  -ipath PATTERN       same as -path but case insensitive
+  -cont PATTERN        file contains PATTERN
+  -icont PATTERN       same as -cont but case insensitive
+  -bcont PATTERN       same as -cont but PATTERN is binary expression
   -type d              is directory
   -type f              is file
 
@@ -757,16 +773,6 @@ def test2():
 
     t = 1
 
-def test_max_depth():
-    args = "D:\\w -maxdepth 1 -type f".split(" ")
-    expr, paths, action, maxdepth = parse_args(args)
-    tree, pred = expr_to_pred(expr)
-    assert(maxdepth == 1)
-    assert(paths == ["D:\\w"])
-    assert(expr == [T(Tok.type, '-type'), T(Tok.arg, 'f')])
-    print("test_max_depth passed")
-    
 if __name__ == "__main__":
     main()
     #test2()
-    #test_max_depth()
