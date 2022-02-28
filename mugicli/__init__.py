@@ -76,7 +76,7 @@ def files_hash(paths, from_stdin, alg):
                 print(" ".join([hash.hexdigest(), path]))
 
 def files_hash_main(alg):
-    parser = argparse.ArgumentParser(description='calculates {} hashsum of file'.format(alg))
+    parser = argparse.ArgumentParser(description='prints {} hashsum of file'.format(alg))
     parser.add_argument('path', nargs='*')
     args = parser.parse_args()
     from_stdin = len(args.path) == 0
