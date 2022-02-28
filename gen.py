@@ -1,9 +1,18 @@
 import re
 import os
 import subprocess
-#progs = ['du', 'extstat', 'find', 'grep', 'head', 'mtimestat', 'sed', 'start', 'tail', 'time', 'touch', 'wc', 'xargs', 'zip']
+base = os.path.dirname(__file__)
 
 progs = [os.path.splitext(n[2:])[0] for n in os.listdir('mugicli') if re.match('py.*\\.py', n)]
+
+console_scripts = ["'py{} = mugicli.py{}:main',".format(n, n) for n in progs]
+
+path = os.path.join(base, 'tmp.txt')
+
+with open(path, 'w', encoding='utf-8') as f:
+    f.write("\n".join(console_scripts))
+
+#print(progs)
 
 helps = dict()
 
@@ -20,7 +29,6 @@ for n in os.listdir('.'):
     with open(n, encoding='utf-8') as f:
         data[b] = f.read()
 
-base = os.path.dirname(__file__)
 path = os.path.join(base, 'readme.md')
 with open(path, 'w', encoding='utf-8') as f:
     f.write(data['about'])
