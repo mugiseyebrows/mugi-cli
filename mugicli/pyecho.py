@@ -53,13 +53,36 @@ def main():
         print_help()
         return
 
-    if opts['e']:
-        transform = unescape
-    else:
-        transform = lambda arg: arg
+    def transform(queue, res):
+
+        if len(queue) == 0:
+            return False
+
+        arg = queue.pop(0)
+
+        if opts['e']:
+            arg = unescape(arg)
+        m = re.search("\\{([0-9]+)..([0-9]+)\\}", arg)
+        if m:
+            head, tail = arg.split(m.group(0), 1)
+            start = int(m.group(1))
+            end = int(m.group(2))
+            for i in reversed(range(start, end+1)):
+                queue.insert(0, "{}{}{}".format(head, i, tail))
+        else:
+            res.append(arg)
         
-    args = [transform(arg) for arg in args]
-    text = " ".join(args)
+        return True
+        
+    #args = [transform(arg) for arg in args]
+    
+    queue = args
+    res = []
+
+    while(transform(queue, res)):
+        pass
+
+    text = " ".join(res)
     sys.stdout.buffer.write(text.encode('utf-8'))
     if not opts['n']:
         sys.stdout.buffer.write(b'\n')
