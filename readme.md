@@ -48,6 +48,19 @@ optional arguments:
   -n N [N ...]  column number
 
 ```
+## pydos2unix
+```
+usage: pydos2unix.py [-h] [path ...]
+
+converts line endings from dos to unix (\r\n -> \n)
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
 ## pydu
 ```
 usage: pydu.py [-s] [-h] [--help] [path ...]
@@ -163,6 +176,32 @@ optional arguments:
   -n N        number of lines to print
 
 ```
+## pyls
+```
+usage: pyls.py [-h] [path ...]
+
+lists directory
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
+## pymd5sum
+```
+usage: pymd5sum.py [-h] [path ...]
+
+prints md5 hashsum of file
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
 ## pymtime
 ```
 usage: pymtime.py [-h] [path ...]
@@ -214,6 +253,80 @@ positional arguments:
 optional arguments:
   -h, --help  show this help message and exit
   -e E        expression
+
+```
+## pyseq
+```
+Print numbers from FIRST to LAST with INCREMENT
+seq LAST
+seq FIRST LAST
+seq FIRST INCREMENT LAST
+
+
+```
+## pysha1sum
+```
+usage: pysha1sum.py [-h] [path ...]
+
+prints sha1 hashsum of file
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
+## pysha224sum
+```
+usage: pysha224sum.py [-h] [path ...]
+
+prints sha224 hashsum of file
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
+## pysha256sum
+```
+usage: pysha256sum.py [-h] [path ...]
+
+prints sha256 hashsum of file
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
+## pysha384sum
+```
+usage: pysha384sum.py [-h] [path ...]
+
+prints sha384 hashsum of file
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
+## pysha512sum
+```
+usage: pysha512sum.py [-h] [path ...]
+
+prints sha512 hashsum of file
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help  show this help message and exit
 
 ```
 ## pysort
@@ -270,6 +383,29 @@ measures execution time of application
 
 
 ```
+## pytmp
+```
+usage: pytmp.py [-h] [-p PRINT [PRINT ...]] [-i INPUT [INPUT ...]] [-o OUTPUT]
+                [--suffix SUFFIX]
+
+temporary file helper
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p PRINT [PRINT ...], --print PRINT [PRINT ...]
+                        print filenames
+  -i INPUT [INPUT ...], --input INPUT [INPUT ...]
+                        input data from file
+  -o OUTPUT, --output OUTPUT
+                        output data to file
+  --suffix SUFFIX
+
+examples:
+    pyecho -e 3\n1\n2 | pytmp -o foo
+    pytmp -i foo | pysort
+    pytmp -p foo | pyxargs pycat 
+
+```
 ## pytouch
 ```
 usage: pytouch.py [-h] [-d D] path [path ...]
@@ -282,6 +418,35 @@ positional arguments:
 optional arguments:
   -h, --help  show this help message and exit
   -d D        datetime
+
+```
+## pyuniq
+```
+usage: pyuniq.py [-h] [--count] [--repeated] [--unique] [path ...]
+
+prints unique or nonunique lines from sorted array of lines
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help      show this help message and exit
+  --count, -c
+  --repeated, -d
+  --unique, -u
+
+```
+## pyunix2dos
+```
+usage: pyunix2dos.py [-h] [path ...]
+
+converts line endings from unix to dos (\n -> \r\n)
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help  show this help message and exit
 
 ```
 ## pywc
