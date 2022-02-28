@@ -4,6 +4,8 @@ import argparse
 import re
 import glob
 
+# todo binary files
+
 def main():
     
     parser = argparse.ArgumentParser(add_help=False, description='prints matching lines')
