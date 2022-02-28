@@ -12,7 +12,7 @@ Aim of this package is to fix all this inconviniences.
 
 1. `mugicli` talks in native paths, pipe it into other applications without doubt
 2. `python -m pip install mugicli` and you're done (assuming `Scripts` in `%PATH%`)
-3. `mugicli` is writen in less than `2k lines` of `python` code, you can easily change it
+3. `mugicli` is writen in less than `3k lines` of `python` code, you can easily change it
 
 Utils support many of gnu utils arguments, but not all of them as it is not drop-in replacement and will never be.
 

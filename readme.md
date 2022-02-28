@@ -12,7 +12,7 @@ Aim of this package is to fix all this inconviniences.
 
 1. `mugicli` talks in native paths, pipe it into other applications without doubt
 2. `python -m pip install mugicli` and you're done (assuming `Scripts` in `%PATH%`)
-3. `mugicli` is writen in less than `2k lines` of `python` code, you can easily change it
+3. `mugicli` is writen in less than `3k lines` of `python` code, you can easily change it
 
 Utils support many of gnu utils arguments, but not all of them as it is not drop-in replacement and will never be.
 
@@ -45,7 +45,7 @@ positional arguments:
 
 optional arguments:
   -h, --help    show this help message and exit
-  -n N [N ...]
+  -n N [N ...]  column number
 
 ```
 ## pydu
@@ -80,6 +80,8 @@ optional arguments:
 ```
 usage: pyextstat.py [-h] [-s] [path ...]
 
+prints file extension statistics
+
 positional arguments:
   path         paths
 
@@ -106,6 +108,11 @@ predicates:
   -newerct DATETIME    same as -newermt but when modified metadata not content
   -name PATTERN        filename matches PATTERN (wildcard)
   -iname PATTERN       same as -name but case insensitive
+  -path PATTERN        file path matches PATTERN
+  -ipath PATTERN       same as -path but case insensitive
+  -cont PATTERN        file contains PATTERN
+  -icont PATTERN       same as -cont but case insensitive
+  -bcont PATTERN       same as -cont but PATTERN is binary expression
   -type d              is directory
   -type f              is file
 
@@ -231,7 +238,7 @@ optional arguments:
 ```
 usage: pystart.py [-h] [--show] path [path ...]
 
-open file in associated application or directory in explorer
+opens file in associated application or directory in explorer
 
 positional arguments:
   path        paths to start
@@ -307,6 +314,21 @@ optional arguments:
 -h --help  show this message and exit
 -n         split arguments to chunks of n
 
+
+```
+## pyxxd
+```
+usage: pyxxd.py [-h] [-s SEEK] [-l LEN] [path ...]
+
+prints file as hex
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SEEK, --seek SEEK  start at offset
+  -l LEN, --len LEN     number of bytes to print
 
 ```
 ## pyzip
