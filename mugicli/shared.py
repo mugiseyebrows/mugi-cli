@@ -147,9 +147,9 @@ def read_lines_(paths, drop_last_empty_line_ = False):
 
     return lines
 
-def run(args):
+def run(args, cwd = None):
     shell = (args[0] in ['type', 'echo', 'copy']) or '|' in args
-    subprocess.run(args, shell=shell)
+    subprocess.run(args, shell=shell, cwd=cwd)
 
 
 def index_of_int(args):
