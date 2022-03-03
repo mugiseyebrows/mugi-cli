@@ -44,7 +44,8 @@ class Tok:
         cont,
         bcont,
         maxdepth,
-    ) = range(29)
+        cdup,
+    ) = range(30)
     
 m = {
     "(": Tok.op_par,
@@ -77,6 +78,7 @@ m = {
     "-path": Tok.path,
     "-ipath": Tok.ipath,
     "-maxdepth": Tok.maxdepth,
+    "-cdup": Tok.cdup
 }
 
 inv_m = {v:k for k,v in m.items()}
@@ -89,16 +91,40 @@ class T:
 tok_pred = [Tok.mmin, Tok.iname, Tok.name, Tok.type, Tok.newer, 
     Tok.newerct, Tok.newermt, Tok.mtime, Tok.ctime,  Tok.size, Tok.cont, Tok.icont, Tok.bcont, Tok.path, Tok.ipath]
 
+def cdup_path(path, cdup):
+    for i in range(cdup):
+        path = os.path.dirname(path)
+    return path
+
+def split_list(vs, sep):
+    res = []
+    for v in vs:
+        if v == sep:
+            yield res
+            res = []
+        else:
+            res.append(v)
+    yield res
+    res = []
+
 class Action:
-    def __init__(self, tokens):
+    def __init__(self, tokens, cdup):
         self._tokens = tokens
+        self._cdup = cdup
 
     def exec(self, root, name, path, is_dir):
-        expr = [path if t.cont == '{}' else t.cont for t in self._tokens]
-        run(expr)
+        path = cdup_path(path, self._cdup)
+        exprs = [t.cont.replace('{}', path) for t in self._tokens]
+        for expr in split_list(exprs, '&&'):
+            run(expr)
 
 class ActionDelete:
+
+    def __init__(self, cdup):
+        self._cdup = cdup
+
     def exec(self, root, name, path, is_dir):
+        path = cdup_path(path, self._cdup)
         if is_dir:
             eprint("Removing directory {}".format(path))
             shutil.rmtree(path)
@@ -108,7 +134,12 @@ class ActionDelete:
 
 
 class ActionPrint:
+
+    def __init__(self, cdup):
+        self._cdup = cdup
+
     def exec(self, root, name, path, is_dir):
+        path = cdup_path(path, self._cdup)
         if os.path.isabs(root):
             print_utf8(path)
         else:
@@ -135,12 +166,19 @@ def parse_args(args = None):
         token = tokens.pop(ix_maxdepth)
         maxdepth = int(token.cont)
 
-    action = ActionPrint()
+    cdup = 0
+    ix = index_of_token(tokens, Tok.cdup)
+    if ix is not None:
+        tokens.pop(ix)
+        token = tokens.pop(ix)
+        cdup = int(token.cont)
+
+    action = ActionPrint(cdup)
 
     ix_delete = index_of_token(tokens, Tok.delete)
     if ix_delete is not None:
         tokens.pop(ix_delete)
-        action = ActionDelete()
+        action = ActionDelete(cdup)
     
     ix_exec = index_of_token(tokens, Tok.exec)
     ix_semicolon = index_of_token(tokens, Tok.semicolon)
@@ -149,7 +187,7 @@ def parse_args(args = None):
         if ix_semicolon is None:
             raise ValueError("Invalid exec expression: semicolon not found")
         exec_tokens = tokens[ix_exec+1:ix_semicolon]
-        action = Action(exec_tokens)
+        action = Action(exec_tokens, cdup)
         tokens = tokens[:ix_exec] + tokens[ix_semicolon+1:]
         #print(tokens)
 
@@ -717,6 +755,7 @@ examples:
   pyfind -iname *.h -exec pygrep -H class {} ;
   pyfind -iname *.o -delete
   pyfind -iname *.py | pyxargs pywc -l
+  pyfind D:\\dev -iname .git -type d -cdup 1
 """)
 
 def main():
