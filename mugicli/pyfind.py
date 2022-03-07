@@ -45,7 +45,9 @@ class Tok:
         bcont,
         maxdepth,
         cdup,
-    ) = range(30)
+        first,
+        last,
+    ) = range(32)
     
 m = {
     "(": Tok.op_par,
@@ -78,7 +80,9 @@ m = {
     "-path": Tok.path,
     "-ipath": Tok.ipath,
     "-maxdepth": Tok.maxdepth,
-    "-cdup": Tok.cdup
+    "-cdup": Tok.cdup,
+    "-first": Tok.first,
+    "-last": Tok.last,
 }
 
 inv_m = {v:k for k,v in m.items()}
@@ -107,7 +111,7 @@ def split_list(vs, sep):
     yield res
     res = []
 
-class Action:
+class ActionExec:
     def __init__(self, tokens, cdup):
         self._tokens = tokens
         self._cdup = cdup
@@ -150,6 +154,31 @@ def index_of_token(tokens, type):
         if tok.type == type:
             return i
 
+@dataclass
+class ExtraArgs:
+    maxdepth: int
+    first: int
+    last: int
+
+def pop_named_token_and_value(tokens, t):
+    ix = index_of_token(tokens, t)
+    if ix is None:
+        return None
+    if ix is not None:
+        token_key = tokens.pop(ix)
+        token_value = tokens.pop(ix)
+        return token_value.cont
+
+def to_int(v):
+    if v is None:
+        return v
+    return int(v)
+
+def to_int_or_zero(v):
+    if v is None:
+        return 0
+    return int(v)
+
 def parse_args(args = None):
     if args is None:
         args = sys.argv[1:]
@@ -159,25 +188,36 @@ def parse_args(args = None):
             token = tokens[i+1]
             tokens[i+1] = T(Tok.arg, token.cont)
 
+    """
     maxdepth = 0
     ix_maxdepth = index_of_token(tokens, Tok.maxdepth)
     if ix_maxdepth is not None:
         tokens.pop(ix_maxdepth)
         token = tokens.pop(ix_maxdepth)
         maxdepth = int(token.cont)
+    """
 
+    maxdepth = to_int_or_zero(pop_named_token_and_value(tokens, Tok.maxdepth))
+    
+    first = to_int(pop_named_token_and_value(tokens, Tok.first))
+
+    last = to_int(pop_named_token_and_value(tokens, Tok.last))
+    
+    """
     cdup = 0
     ix = index_of_token(tokens, Tok.cdup)
     if ix is not None:
         tokens.pop(ix)
         token = tokens.pop(ix)
         cdup = int(token.cont)
-
+    """
+    cdup = to_int_or_zero(pop_named_token_and_value(tokens, Tok.cdup))
+    
     action = ActionPrint(cdup)
 
-    ix_delete = index_of_token(tokens, Tok.delete)
-    if ix_delete is not None:
-        tokens.pop(ix_delete)
+    ix = index_of_token(tokens, Tok.delete)
+    if ix is not None:
+        tokens.pop(ix)
         action = ActionDelete(cdup)
     
     ix_exec = index_of_token(tokens, Tok.exec)
@@ -187,9 +227,8 @@ def parse_args(args = None):
         if ix_semicolon is None:
             raise ValueError("Invalid exec expression: semicolon not found")
         exec_tokens = tokens[ix_exec+1:ix_semicolon]
-        action = Action(exec_tokens, cdup)
+        action = ActionExec(exec_tokens, cdup)
         tokens = tokens[:ix_exec] + tokens[ix_semicolon+1:]
-        #print(tokens)
 
     i = len(tokens)-1
     while i > -1 and tokens[i].type == Tok.und:
@@ -207,8 +246,9 @@ def parse_args(args = None):
 
     #print('expr, paths', expr, paths)
 
-    return expr, paths, action, maxdepth
+    extraArgs = ExtraArgs(maxdepth=maxdepth, first=first, last=last)
 
+    return expr, paths, action, extraArgs
 
 class Cache:
 
@@ -745,6 +785,9 @@ predicates:
   -bcont PATTERN       same as -cont but PATTERN is binary expression
   -type d              is directory
   -type f              is file
+  -cdup N              print (or take action) parent path (strip N trailing components from path)
+  -first N             print (or take action) on first N found items
+  -last N              print (or take action) on last N found items
 
 predicates can be inverted using -not, can be grouped together in boolean expressions 
 using -or and -and and parenthesis
@@ -765,13 +808,19 @@ def main():
         print_help()
         return
 
-    expr, paths, action, maxdepth = parse_args()
+    expr, paths, action, extraArgs = parse_args()
     tree, pred = expr_to_pred(expr)
     if len(paths) == 0:
         paths.append(".")
 
+    collect = extraArgs.last is not None
+
+    collected = []
+
+    executed = 0
+
     for path in paths:
-        for root, dirs, files in walk(path, maxdepth=maxdepth):
+        for root, dirs, files in walk(path, maxdepth=extraArgs.maxdepth):
             for name in dirs:
                 p = os.path.join(root, name)
                 if pred(name, p, True):
@@ -779,39 +828,21 @@ def main():
             for name in files:
                 p = os.path.join(root, name)
                 if pred(name, p, False):
-                    action.exec(path, name, p, False)
+                    if collect:
+                        collected.append((path, name, p, False))
+                    else:
+                        action.exec(path, name, p, False)
+                        executed += 1
+                        if extraArgs.first == executed:
+                            return 
+    if collect:
+        for item in collected[-extraArgs.last:]:
+            action.exec(*item)
 
 def unquote(s):
     if s[0] == '"' and s[-1] == '"':
         return s[1:-1]
     return s
 
-def test():
-    args = [unquote(e) for e in '( -iname "lamp.*" -mmin +1 ) -and ( -not -type d )'.split(" ")]
-    expr, paths, action = parse_args(args)
-    tree, pred = expr_to_pred(expr)
-
-    path = "D:\\w\\lamp.jpg"
-    name = os.path.basename(path)
-    is_dir = False
-
-    res = pred(name, path, is_dir)
-
-    t = 1
-
-def test2():
-    args = "-type f -and ( ( -not -mtime -1 ) -or ( -mmin -1 ) -or -mmin -2 )".split(" ")
-    expr, paths = parse_args(args)
-    tree, pred = expr_to_pred(expr)
-
-    path = "D:\\w\\test.bat"
-    name = os.path.basename(path)
-    is_dir = False
-
-    res = pred(name, path, is_dir)
-
-    t = 1
-
 if __name__ == "__main__":
     main()
-    #test2()
