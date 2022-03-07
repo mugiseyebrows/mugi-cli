@@ -10,7 +10,7 @@ NUM_RX = r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?)'
 def glob_paths(paths):
     res = []
     for path in paths:
-        if glob.has_magic(path):
+        if has_magic(path):
             res += glob.glob(path)
         else:
             res.append(path)
@@ -25,10 +25,16 @@ def glob_paths_files(paths):
 def glob_paths_dirs(paths):
     return _glob_paths_pred(paths, lambda path: os.path.isdir(path))
 
+def has_magic(path):
+    # brackets in path is ambigous
+    if os.path.exists(path):
+        return False
+    return glob.has_magic(path) # ok
+
 def _glob_paths_pred(paths, pred):
     res = []
     for path in paths:
-        if glob.has_magic(path):
+        if has_magic(path):
             for item in glob.glob(path):
                 if pred(item):
                     res.append(item)
@@ -40,7 +46,7 @@ def _glob_paths_pred(paths, pred):
 def glob_paths_dirs(paths):
     res = []
     for path in paths:
-        if glob.has_magic(path):
+        if has_magic(path):
             for item in glob.glob(path):
                 if os.path.isdir(item):
                     res.append(item)

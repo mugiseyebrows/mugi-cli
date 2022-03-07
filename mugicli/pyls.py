@@ -1,5 +1,5 @@
 import argparse
-from .shared import glob_paths, print_utf8
+from .shared import glob_paths, print_utf8, has_magic
 import glob
 import os
 
@@ -14,7 +14,7 @@ def main():
         paths = args.path
 
     for path in paths:
-        if glob.has_magic(path):
+        if has_magic(path):
             for f in glob.glob(path):
                 print_utf8(f)
         else:

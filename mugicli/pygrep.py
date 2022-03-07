@@ -1,4 +1,4 @@
-from .shared import glob_paths_files, line_reader, print_lines
+from .shared import glob_paths_files, line_reader, print_lines, has_magic
 import sys
 import argparse
 import re
@@ -28,7 +28,7 @@ def main():
     elif args.without_filename:
         print_filename = False
     else:
-        many_inputs = len(args.path) > 1 or (len(args.path) > 0 and glob.has_magic(args.path[0]))
+        many_inputs = len(args.path) > 1 or (len(args.path) > 0 and has_magic(args.path[0]))
         print_filename = many_inputs
 
     flags = re.IGNORECASE if args.ignore_case else 0

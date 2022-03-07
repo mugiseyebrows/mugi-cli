@@ -5,6 +5,8 @@ import glob
 import subprocess
 import shutil
 
+from mugicli.shared import glob_paths
+
 def find_explorer():
     # todo other platforms
     explorer = shutil.which('explorer')
@@ -27,12 +29,7 @@ def main():
 
     paths = []
 
-    for path in args.path:
-        if glob.has_magic(path):
-            for path_ in glob.glob(path):
-                paths.append(path_)
-        else:
-            paths.append(path)
+    paths = glob_paths(args.path)
 
     if args.show:
         explorer = find_explorer()

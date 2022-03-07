@@ -4,7 +4,7 @@ import datetime
 import dateutil.parser
 import glob
 import os
-from .shared import eprint
+from .shared import eprint, has_magic
 
 def set_mtime(filename, mtime):
     stat = os.stat(filename)
@@ -24,7 +24,7 @@ def main():
         mtime = datetime.datetime.now()
 
     for path in args.path:
-        if glob.has_magic(path):
+        if has_magic(path):
             paths = glob.glob(path)
         else:
             paths = [path]
