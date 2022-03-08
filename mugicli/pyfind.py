@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from itertools import count
 import subprocess
 import shutil
-from .shared import eprint, run, print_utf8
+from .shared import eprint, glob_paths_dirs, has_magic, run, print_utf8
 import fnmatch
 from . import parse_size
 
@@ -230,6 +230,11 @@ def parse_args(args = None):
         action = ActionExec(exec_tokens, cdup)
         tokens = tokens[:ix_exec] + tokens[ix_semicolon+1:]
 
+    paths = []
+    pop_paths(tokens, paths, 0)
+    pop_paths(tokens, paths, -1)
+
+    """
     i = len(tokens)-1
     while i > -1 and tokens[i].type == Tok.und:
         i -= 1
@@ -240,15 +245,32 @@ def parse_args(args = None):
     paths2 = []
     if i > 0:
         paths2, tokens = tokens[:i], tokens[i:]
+    """
 
-    expr = tokens
-    paths = [e.cont for e in paths1 + paths2]
+    #expr = tokens
+    #paths = [e.cont for e in paths1 + paths2]
 
     #print('expr, paths', expr, paths)
 
     extraArgs = ExtraArgs(maxdepth=maxdepth, first=first, last=last)
 
-    return expr, paths, action, extraArgs
+    return tokens, paths, action, extraArgs
+
+def pop_paths(tokens, paths, index):
+    while len(tokens) > 0 and tokens[index].type == Tok.und:
+        path = tokens[index].cont
+        if has_magic(path):
+            paths_ = glob_paths_dirs([path])
+            if len(paths_):
+                raise ValueError("no such path {}".format(path))
+            for p in paths_:
+                paths.append(p)
+        else:
+            if os.path.isdir(path):
+                paths.append(path)
+            else:
+                raise ValueError("no such path {}".format(path))
+        tokens.pop(index)
 
 class Cache:
 
