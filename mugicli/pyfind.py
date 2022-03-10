@@ -3,15 +3,29 @@ import os
 import datetime
 import sys
 import re
-import dateutil.parser
+from .shared import eprint, glob_paths_dirs, has_magic, run, print_utf8
 import sys
 from dataclasses import dataclass
 from itertools import count
 import subprocess
 import shutil
-from .shared import eprint, glob_paths_dirs, has_magic, run, print_utf8
 import fnmatch
 from . import parse_size
+
+try:
+    import dateutil.parser
+except ImportError as e:
+    eprint("{}, -newermt -newerct is limited to yyyy-mm-dd format".format(str(e)))
+    def parse_date(value):
+        m = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2})', value)
+        if m:
+            year = int(m.group(1))
+            month = int(m.group(2))
+            day = int(m.group(3))
+            return datetime.datetime(year, month, day)
+    class dateutil:
+        class parser:
+            parse = parse_date
 
 class Tok:
     (
