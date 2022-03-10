@@ -366,10 +366,10 @@ def pred_newer(name, path, is_dir, arg, cache):
     return greater(cache.mtime(path), cache.mtime(arg))
     
 def pred_newermt(name, path, is_dir, arg, cache):
-    return greater(cache.mtime(path), cache.parsedate(arg))
+    return greater(cache.mtime(path), cache.parse_date(arg))
 
 def pred_newerct(name, path, is_dir, arg, cache):
-    return greater(cache.ctime(path), cache.parsedate(arg))
+    return greater(cache.ctime(path), cache.parse_date(arg))
 
 def pred_xtime(arg, cache, xtime):
     if xtime is None:
