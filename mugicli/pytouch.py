@@ -5,6 +5,7 @@ import dateutil.parser
 import glob
 import os
 from .shared import eprint, has_magic
+from . import parse_time_arg
 
 def set_mtime(filename, mtime):
     stat = os.stat(filename)
@@ -14,12 +15,17 @@ def set_mtime(filename, mtime):
 def main():
     parser = argparse.ArgumentParser(description='changes mtime to current time or specified time')
     parser.add_argument('path', nargs='+', help='target path')
-    parser.add_argument('-d', help='datetime')
+    parser.add_argument('-d', help='datetime or relative time in format [+-]NUM[d|h|m|s] format')
 
     args = parser.parse_args()
 
     if args.d:
-        mtime = dateutil.parser.parse(args.d)
+        d = parse_time_arg(args.d)
+        if d is not None:
+            now = datetime.datetime.now()
+            mtime = now + datetime.timedelta(seconds=d)
+        else:
+            mtime = dateutil.parser.parse(args.d)
     else:
         mtime = datetime.datetime.now()
 

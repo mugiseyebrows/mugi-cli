@@ -6,6 +6,7 @@ from .shared import glob_paths, glob_paths_dirs
 import datetime
 import json
 import fnmatch
+from . import parse_time_arg
 
 def median(vs):
     if len(vs) % 2:
@@ -16,11 +17,6 @@ def median(vs):
 def average(vs):
     return sum(vs) / len(vs)
 
-def parse_time_arg(v):
-    m = re.match('([0-9.e-]+)(d|h|m|s|)', v)
-    v = float(m.group(1))
-    k = {"d": 3600 * 24, "h": 3600, "m": 60, "s": 1, "": 1}[m.group(2)]
-    return k * v
 
 def include_exclude(include, exclude, name):
     if include is None and exclude is None:

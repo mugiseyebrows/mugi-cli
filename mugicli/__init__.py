@@ -145,3 +145,13 @@ def head_tail_main(t):
             data = read_file_bin(path)
             lines = bytes_to_lines(data)
             head_tail_print_lines(lines, args.n, t)
+
+def parse_time_arg(text):
+    m = re.match('([+-]?)([0-9.e-]+)(d|h|m|s|)', text)
+    if m is None:
+        return
+    sign = -1 if m.group(1) == '-' else 1
+    value = float(m.group(2))
+    suffix = m.group(3)
+    mul = {"d": 3600 * 24, "h": 3600, "m": 60, "s": 1, "": 1}[suffix]
+    return sign * mul * value
