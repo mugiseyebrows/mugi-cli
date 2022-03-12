@@ -18,6 +18,7 @@ setup(
         'console_scripts': [
             'pycat = mugicli.pycat:main',
             'pycol = mugicli.pycol:main',
+            'pycwd = mugicli.pycwd:main',
             'pydos2unix = mugicli.pydos2unix:main',
             'pydu = mugicli.pydu:main',
             'pyecho = mugicli.pyecho:main',
