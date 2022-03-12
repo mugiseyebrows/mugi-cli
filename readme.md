@@ -22,7 +22,7 @@ You can use this package to avoid bash and powershell and still have decent shel
 
 ## pycat
 ```
-usage: pycat.py [-h] [--text] path [path ...]
+usage: pycat [-h] [--text] path [path ...]
 
 prints file to stdout
 
@@ -36,7 +36,7 @@ optional arguments:
 ```
 ## pycol
 ```
-usage: pycol.py [-h] [-n N [N ...]] [path ...]
+usage: pycol [-h] [-n N [N ...]] [path ...]
 
 extracts and prints specific columns
 
@@ -48,9 +48,17 @@ optional arguments:
   -n N [N ...]  column number
 
 ```
+## pycwd
+```
+usage: pycwd [-h] [--help]
+
+prints current working directory
+
+
+```
 ## pydos2unix
 ```
-usage: pydos2unix.py [-h] [path ...]
+usage: pydos2unix [-h] [path ...]
 
 converts line endings from dos to unix (\r\n -> \n)
 
@@ -63,7 +71,7 @@ optional arguments:
 ```
 ## pydu
 ```
-usage: pydu.py [-s] [-h] [--help] [path ...]
+usage: pydu [-s] [-h] [--help] [path ...]
 
 prints directories sizes
 
@@ -91,7 +99,7 @@ optional arguments:
 ```
 ## pyextstat
 ```
-usage: pyextstat.py [-h] [-s] [path ...]
+usage: pyextstat [-h] [-s] [path ...]
 
 prints file extension statistics
 
@@ -128,6 +136,9 @@ predicates:
   -bcont PATTERN       same as -cont but PATTERN is binary expression
   -type d              is directory
   -type f              is file
+  -cdup N              print (or take action) parent path (strip N trailing components from path)
+  -first N             print (or take action) on first N found items
+  -last N              print (or take action) on last N found items
 
 predicates can be inverted using -not, can be grouped together in boolean expressions 
 using -or and -and and parenthesis
@@ -138,12 +149,13 @@ examples:
   pyfind -iname *.h -exec pygrep -H class {} ;
   pyfind -iname *.o -delete
   pyfind -iname *.py | pyxargs pywc -l
+  pyfind D:\dev -iname .git -type d -cdup 1
 
 
 ```
 ## pygrep
 ```
-usage: pygrep.py [-i] [-o] [-v] [-H] [-h] [-n] [--help] expr [path ...]
+usage: pygrep [-i] [-o] [-v] [-H] [-h] [-n] [--help] expr [path ...]
 
 prints matching lines
 
@@ -164,7 +176,7 @@ optional arguments:
 ```
 ## pyhead
 ```
-usage: pyhead.py [-h] [-n N] [path ...]
+usage: pyhead [-h] [-n N] [path ...]
 
 prints n lines from head of file
 
@@ -178,7 +190,7 @@ optional arguments:
 ```
 ## pyls
 ```
-usage: pyls.py [-h] [path ...]
+usage: pyls [-h] [path ...]
 
 lists directory
 
@@ -191,7 +203,7 @@ optional arguments:
 ```
 ## pymd5sum
 ```
-usage: pymd5sum.py [-h] [path ...]
+usage: pymd5sum [-h] [path ...]
 
 prints md5 hashsum of file
 
@@ -204,7 +216,7 @@ optional arguments:
 ```
 ## pymtime
 ```
-usage: pymtime.py [-h] [path ...]
+usage: pymtime [-h] [path ...]
 
 prints mtime of file
 
@@ -217,7 +229,7 @@ optional arguments:
 ```
 ## pymtimestat
 ```
-usage: pymtimestat.py [-h] [-r RECENT] [-o OLD] [-a AVERAGE]
+usage: pymtimestat [-h] [-r RECENT] [-o OLD] [-a AVERAGE]
                       [-i INCLUDE [INCLUDE ...]] [-e EXCLUDE [EXCLUDE ...]]
                       [path ...]
 
@@ -242,7 +254,7 @@ optional arguments:
 ```
 ## pysed
 ```
-usage: pysed.py [-h] [-e E] expr [path ...]
+usage: pysed [-h] [-e E] expr [path ...]
 
 replaces text
 
@@ -266,7 +278,7 @@ seq FIRST INCREMENT LAST
 ```
 ## pysha1sum
 ```
-usage: pysha1sum.py [-h] [path ...]
+usage: pysha1sum [-h] [path ...]
 
 prints sha1 hashsum of file
 
@@ -279,7 +291,7 @@ optional arguments:
 ```
 ## pysha224sum
 ```
-usage: pysha224sum.py [-h] [path ...]
+usage: pysha224sum [-h] [path ...]
 
 prints sha224 hashsum of file
 
@@ -292,7 +304,7 @@ optional arguments:
 ```
 ## pysha256sum
 ```
-usage: pysha256sum.py [-h] [path ...]
+usage: pysha256sum [-h] [path ...]
 
 prints sha256 hashsum of file
 
@@ -305,7 +317,7 @@ optional arguments:
 ```
 ## pysha384sum
 ```
-usage: pysha384sum.py [-h] [path ...]
+usage: pysha384sum [-h] [path ...]
 
 prints sha384 hashsum of file
 
@@ -318,7 +330,7 @@ optional arguments:
 ```
 ## pysha512sum
 ```
-usage: pysha512sum.py [-h] [path ...]
+usage: pysha512sum [-h] [path ...]
 
 prints sha512 hashsum of file
 
@@ -331,7 +343,7 @@ optional arguments:
 ```
 ## pysort
 ```
-usage: pysort.py [-h] [--numeric-sort] [--reverse] [--random-sort] [--unique]
+usage: pysort [-h] [--numeric-sort] [--reverse] [--random-sort] [--unique]
                  [path ...]
 
 sorts lines
@@ -349,7 +361,7 @@ optional arguments:
 ```
 ## pystart
 ```
-usage: pystart.py [-h] [--show] path [path ...]
+usage: pystart [-h] [--show] path [path ...]
 
 opens file in associated application or directory in explorer
 
@@ -363,7 +375,7 @@ optional arguments:
 ```
 ## pytail
 ```
-usage: pytail.py [-h] [-n N] [path ...]
+usage: pytail [-h] [-n N] [path ...]
 
 prints n lines from tail of file
 
@@ -385,7 +397,7 @@ measures execution time of application
 ```
 ## pytmp
 ```
-usage: pytmp.py [-h] [-p PRINT [PRINT ...]] [-i INPUT [INPUT ...]] [-o OUTPUT]
+usage: pytmp [-h] [-p PRINT [PRINT ...]] [-i INPUT [INPUT ...]] [-o OUTPUT]
                 [--suffix SUFFIX]
 
 temporary file helper
@@ -408,7 +420,7 @@ examples:
 ```
 ## pytouch
 ```
-usage: pytouch.py [-h] [-d D] path [path ...]
+usage: pytouch [-h] [-d D] path [path ...]
 
 changes mtime to current time or specified time
 
@@ -417,12 +429,12 @@ positional arguments:
 
 optional arguments:
   -h, --help  show this help message and exit
-  -d D        datetime
+  -d D        datetime or relative time in format [+-]NUM[d|h|m|s] format
 
 ```
 ## pyuniq
 ```
-usage: pyuniq.py [-h] [--count] [--repeated] [--unique] [path ...]
+usage: pyuniq [-h] [--count] [--repeated] [--unique] [path ...]
 
 prints unique or nonunique lines from sorted array of lines
 
@@ -438,7 +450,7 @@ optional arguments:
 ```
 ## pyunix2dos
 ```
-usage: pyunix2dos.py [-h] [path ...]
+usage: pyunix2dos [-h] [path ...]
 
 converts line endings from unix to dos (\n -> \r\n)
 
@@ -451,7 +463,7 @@ optional arguments:
 ```
 ## pywc
 ```
-usage: pywc.py [-h] [-l] [-w] [-m] [-c] [path ...]
+usage: pywc [-h] [-l] [-w] [-m] [-c] [path ...]
 
 calculates number or lines words, chars and bytes in files
 
@@ -471,19 +483,21 @@ examples:
 ```
 ## pyxargs
 ```
-usage: pyxargs [-n num] command [args...]
+usage: pyxargs [-L NUM] [-I VAR] command [args...]
 
 reads arguments from stdin and applies them to command
 
 optional arguments:
--h --help  show this message and exit
--n         split arguments to chunks of n
+  -h --help  show this message and exit
+  -L NUM     split arguments to chunks of N args
+  -I VAR     replace VAR with arg (assumes -L 1)
+
 
 
 ```
 ## pyxxd
 ```
-usage: pyxxd.py [-h] [-s SEEK] [-l LEN] [path ...]
+usage: pyxxd [-h] [-s SEEK] [-l LEN] [path ...]
 
 prints file as hex
 
@@ -498,7 +512,9 @@ optional arguments:
 ```
 ## pyzip
 ```
-usage: pyzip.py [-h] [-o OUTPUT] {a,x,l} zip [sources ...]
+usage: pyzip [-h] [-o OUTPUT] [-m {deflate,d,lzma,l,bzip2,b,store,s}]
+                [-l L] [--base BASE]
+                {a,x,l} zip [sources ...]
 
 appends, extracts and list contents of zip archive
 
@@ -511,6 +527,12 @@ optional arguments:
   -h, --help            show this help message and exit
   -o OUTPUT, --output OUTPUT
                         output directory
+  -m {deflate,d,lzma,l,bzip2,b,store,s}
+                        compression method
+  -l L                  compression level 0..9 for deflate (0 - best speed, 9
+                        - best compression) 1..9 for bzip2, has no effect if
+                        method is store or lzma
+  --base BASE           base directory
 
 ```
 # Notes
