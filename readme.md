@@ -513,7 +513,7 @@ optional arguments:
 ## pyzip
 ```
 usage: pyzip [-h] [-o OUTPUT] [-m {deflate,d,lzma,l,bzip2,b,store,s}]
-                [-l L] [--base BASE] [--list LIST] [-s] [-v]
+                [-l L] [--base BASE] [--dir DIR] [--list LIST] [-s] [-v]
                 {a,x,l} zip [sources ...]
 
 appends, extracts and list contents of zip archive
@@ -533,6 +533,7 @@ optional arguments:
                         - best compression) 1..9 for bzip2, has no effect if
                         method is store or lzma
   --base BASE           base directory
+  --dir DIR             prepend directory to path
   --list LIST           path to list of files
   -s, --silent
   -v, --verbose
