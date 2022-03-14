@@ -26,6 +26,7 @@ def main():
     parser.add_argument('-m', choices=list(COMPRESSION_METHODS.keys()), help='compression method')
     parser.add_argument('-l', type=int, help="compression level 0..9 for deflate (0 - best speed, 9 - best compression) 1..9 for bzip2, has no effect if method is store or lzma")
     parser.add_argument('--base', help='base directory')
+    parser.add_argument('--dir', help='prepend directory to path')
     parser.add_argument('--list', help='path to list of files')
     parser.add_argument('-s', '--silent', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
@@ -53,8 +54,10 @@ def main():
 
         compression = COMPRESSION_METHODS[args.m] if args.m is not None else ZIP_DEFLATED
 
-        def add_file(zf, p, base, verbose):
+        def add_file(zf, p, base):
             relpath = os.path.relpath(p, base)
+            if args.dir:
+                relpath = os.path.join(args.dir, relpath)
             if verbose:
                 print_utf8(p)
             zf.write(p, relpath)
@@ -70,12 +73,12 @@ def main():
                     base = args.base
 
                 if os.path.isfile(path):
-                    add_file(zf, path, base, verbose)
+                    add_file(zf, path, base)
                 else:
                     for root, dirs, files in os.walk(path):
                         for f in files:
                             p = os.path.join(root, f)
-                            add_file(zf, p, base, verbose)
+                            add_file(zf, p, base)
                         
     if args.command == 'x':
         with zipfile.ZipFile(args.zip) as zf:
