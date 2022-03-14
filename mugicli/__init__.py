@@ -25,6 +25,10 @@ def read_stdin_text():
     data = sys.stdin.buffer.read()
     return decode_bytes(data)
 
+def read_file_text(path):
+    data = read_file_bin(path)
+    return decode_bytes(data)
+
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
