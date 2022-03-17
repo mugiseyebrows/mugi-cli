@@ -7,6 +7,7 @@ import argparse
 import sys
 from .shared import glob_paths_files, print_utf8, drop_last_empty_line, index_of_int
 import os
+import fnmatch
 
 def decode_bytes(data):
     try:
@@ -228,3 +229,22 @@ def _walk(top, topdown, onerror, followlinks, maxdepth):
             yield from _walk(new_path, topdown, onerror, followlinks, maxdepth)
         yield top, dirs, nondirs
 
+def include_exclude(include, exclude, name):
+    if include is None and exclude is None:
+        return True
+    if include is None:
+        ok = True
+    else:
+        ok = False
+        for pat in include:
+            if fnmatch.fnmatch(name, pat):
+                ok = True
+    if not ok:
+        return False
+    if exclude is None:
+        return True
+    else:
+        for pat in exclude:
+            if fnmatch.fnmatch(name, pat):
+                return False
+    return True

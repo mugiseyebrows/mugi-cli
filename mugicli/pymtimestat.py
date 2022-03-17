@@ -6,7 +6,7 @@ from .shared import glob_paths, glob_paths_dirs
 import datetime
 import json
 import fnmatch
-from . import parse_time_arg
+from . import parse_time_arg, include_exclude
 
 def median(vs):
     if len(vs) % 2:
@@ -16,27 +16,6 @@ def median(vs):
 
 def average(vs):
     return sum(vs) / len(vs)
-
-
-def include_exclude(include, exclude, name):
-    if include is None and exclude is None:
-        return True
-    if include is None:
-        ok = True
-    else:
-        ok = False
-        for pat in include:
-            if fnmatch.fnmatch(name, pat):
-                ok = True
-    if not ok:
-        return False
-    if exclude is None:
-        return True
-    else:
-        for pat in exclude:
-            if fnmatch.fnmatch(name, pat):
-                return False
-    return True
 
 def main():
     parser = argparse.ArgumentParser(description='prints mtime statistics')
