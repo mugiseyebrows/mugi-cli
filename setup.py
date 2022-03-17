@@ -43,6 +43,7 @@ setup(
             'pytime = mugicli.pytime:main',
             'pytmp = mugicli.pytmp:main',
             'pytouch = mugicli.pytouch:main',
+            'pytree = mugicli.pytree:main',
             'pyuniq = mugicli.pyuniq:main',
             'pyunix2dos = mugicli.pyunix2dos:main',
             'pywc = mugicli.pywc:main',

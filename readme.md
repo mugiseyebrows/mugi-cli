@@ -432,6 +432,25 @@ optional arguments:
   -d D        datetime or relative time in format [+-]NUM[d|h|m|s] format
 
 ```
+## pytree
+```
+usage: pytree [-h] [-L LEVEL] [-i INCLUDE [INCLUDE ...]]
+                 [-e EXCLUDE [EXCLUDE ...]]
+                 path
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -L LEVEL, --level LEVEL
+                        depth
+  -i INCLUDE [INCLUDE ...], --include INCLUDE [INCLUDE ...]
+                        include files globs
+  -e EXCLUDE [EXCLUDE ...], --exclude EXCLUDE [EXCLUDE ...]
+                        include files globs
+
+```
 ## pyuniq
 ```
 usage: pyuniq [-h] [--count] [--repeated] [--unique] [path ...]
