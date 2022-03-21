@@ -7,6 +7,9 @@ from .shared import print_utf8, glob_paths
 from . import read_file_text
 import sys
 
+# todo read from stdin
+# todo ouput to stdout
+
 def main():
 
     COMPRESSION_METHODS = {
@@ -21,7 +24,7 @@ def main():
     }
 
     parser = argparse.ArgumentParser(description='appends, extracts and list contents of zip archive')
-    parser.add_argument('command', choices=['a','x','l'], help='add extract list')
+    parser.add_argument('command', choices=['a','x','l'], help='add extract list') # todo u - update
     parser.add_argument('-o', '--output', help='output directory')
     parser.add_argument('-m', choices=list(COMPRESSION_METHODS.keys()), help='compression method')
     parser.add_argument('-l', type=int, help="compression level 0..9 for deflate (0 - best speed, 9 - best compression) 1..9 for bzip2, has no effect if method is store or lzma")
@@ -31,7 +34,7 @@ def main():
     parser.add_argument('-s', '--silent', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('zip')
-    parser.add_argument('sources', nargs='*') # todo wildcards
+    parser.add_argument('sources', nargs='*')
     args = parser.parse_args()
 
     dst_base = args.output if args.output is not None else os.getcwd()
@@ -45,7 +48,6 @@ def main():
     verbose = args.verbose or not args.silent
 
     if args.command == 'a':
-
         if args.list is None:
             paths = glob_paths(args.sources)
         else:
@@ -81,6 +83,7 @@ def main():
                             add_file(zf, p, base)
                         
     if args.command == 'x':
+        # todo extract globs and dirs, use --list
         with zipfile.ZipFile(args.zip) as zf:
             for name in zf.namelist():
                 name_ = name.replace('/','\\')
@@ -90,6 +93,7 @@ def main():
                     zf.extract(name, dst_base)
                     
     if args.command == 'l':
+        # todo print size
         with zipfile.ZipFile(args.zip) as zf:
             for name in zf.namelist():
                 print_utf8(name)

@@ -130,7 +130,8 @@ class Tree:
         
 
 def main():
-    # todo exclude clildless dirs
+    # todo inlcude exclude clildless dirs
+    # todo sort alphabetically, dirs first files first
     parser = argparse.ArgumentParser()
     parser.add_argument('-L','--level', type=int, help='depth', default=0)
     parser.add_argument('-i', '--include', nargs='+', help='include files globs')

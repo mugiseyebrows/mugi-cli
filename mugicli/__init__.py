@@ -123,6 +123,8 @@ def bytes_to_lines(data):
     drop_last_empty_line(lines)
     return lines
 
+# todo bytes, chars
+
 def head_tail_main(t):
 
     args_ = sys.argv[1:]
