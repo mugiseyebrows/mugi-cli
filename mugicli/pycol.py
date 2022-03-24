@@ -1,6 +1,6 @@
 import os
 import argparse
-from . import read_stdin_text
+from . import read_file_text, read_stdin_text
 from .shared import glob_paths_files, print_utf8
 import re
 
@@ -19,7 +19,9 @@ def main():
             print_cols(line, args.n)
     else:
         for path in glob_paths_files(args.path):
-            print_cols(path, args.n)
+            text = read_file_text(path)
+            for line in text.split("\n"):
+                print_cols(line, args.n)
 
 if __name__ == "__main__":
     main()
