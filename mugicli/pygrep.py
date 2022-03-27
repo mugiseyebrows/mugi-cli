@@ -1,4 +1,5 @@
-from .shared import glob_paths_files, line_reader, print_lines, has_magic
+from mugicli import read_file_lines, read_stdin_lines
+from .shared import glob_paths_files, line_reader, print_lines, has_magic, print_utf8
 import sys
 import argparse
 import re
@@ -21,8 +22,6 @@ def main():
 
     args = parser.parse_args()
 
-    paths = glob_paths_files(args.path)
-
     if args.with_filename:
         print_filename = True
     elif args.without_filename:
@@ -44,7 +43,7 @@ def main():
             cols.append(m.group(0))
         else:
             cols.append(line)
-        return ':'.join(cols) + '\n'
+        return ':'.join(cols)
 
     def pred_match(line):
         m = rx.search(line)
@@ -59,11 +58,21 @@ def main():
     else:
         pred = pred_match
 
-    for i, line, path in line_reader(paths, len(args.path) == 0):
-        line = line.rstrip('\n')
+    def on_line(path, i, line):
         m, matched = pred(line)
         if matched:
-            print_lines([formatter(path, i, m, line)])
+            #print_lines([])
+            print_utf8(formatter(path, i, m, line))
+
+    if len(args.path) == 0:
+        lines = read_stdin_lines(drop_last=True, rstrip=True)
+        for i, line in enumerate(lines):
+            on_line('-', i, line)
+    else:
+        for path in glob_paths_files(args.path):
+            lines = read_file_lines(path, drop_last=True, rstrip=True)
+            for i, line in enumerate(lines):
+                on_line(path, i, line)
 
 if __name__ == "__main__":
     main()
