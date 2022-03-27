@@ -27,6 +27,25 @@ def read_stdin_text():
     data = sys.stdin.buffer.read()
     return decode_bytes(data)
 
+def read_stdin_lines(drop_last = True, rstrip = True):
+    if rstrip:
+        lines = [line.rstrip('\r') for line in read_stdin_text().split('\n')]
+    else:
+        lines = [line + '\n' for line in read_stdin_text().split('\n')]
+    if drop_last and lines[-1] in ['\n', '\r\n', '']:
+        lines.pop()
+    return lines
+
+def read_file_lines(path, drop_last = True, rstrip = True):
+    text = read_file_text(path)
+    if rstrip:
+        lines = [line.rstrip('\r') for line in text.split('\n')]
+    else:
+        lines = [line + '\n' for line in text.split('\n')]
+    if drop_last and lines[-1] in ['\n', '\r\n', '']:
+        lines.pop()
+    return lines
+
 def read_file_text(path):
     data = read_file_bin(path)
     return decode_bytes(data)
