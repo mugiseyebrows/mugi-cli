@@ -30,6 +30,7 @@ setup(
             'pymd5sum = mugicli.pymd5sum:main',
             'pymtime = mugicli.pymtime:main',
             'pymtimestat = mugicli.pymtimestat:main',
+            'pyplot = mugicli.pyplot:main',
             'pysed = mugicli.pysed:main',
             'pyseq = mugicli.pyseq:main',
             'pysha1sum = mugicli.pysha1sum:main',

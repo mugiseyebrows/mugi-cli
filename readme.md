@@ -252,6 +252,19 @@ optional arguments:
                         include files glob
 
 ```
+## pyplot
+```
+usage: pyplot [-h] [path ...]
+
+plots data
+
+positional arguments:
+  path
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
 ## pysed
 ```
 usage: pysed [-h] [-e E] expr [path ...]
