@@ -39,7 +39,7 @@ def main():
     args2 = read_stdin_args()
 
     if opts['L'] is not None:
-        for args in chunks(args2, int(opts['n'])):
+        for args in chunks(args2, int(opts['L'])):
             run(args1 + args)
     elif opts['I'] is not None:
         for arg in args2:
