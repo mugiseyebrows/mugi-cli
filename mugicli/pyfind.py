@@ -170,13 +170,19 @@ class ActionPrint:
             path_ = os.path.relpath(path, os.getcwd())
 
         if self._output is None:
-            print_utf8(path_)
+            try:
+                print_utf8(path_)
+            except UnicodeEncodeError as e:
+                print(e)
         else:
             f = self._f
             if f is None:
                 f = open(self._output, "w", encoding='utf-8')
                 self._f = f
-            f.write(path_ + "\n")
+            try:
+                f.write(path_ + "\n")
+            except UnicodeEncodeError as e:
+                print(e)
             
     def flush(self):
         f = self._f
