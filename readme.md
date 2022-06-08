@@ -113,9 +113,13 @@ optional arguments:
 ```
 ## pyfind
 ```
-usage: pyfind [conditions] [-exec cmd args {} ;] [-delete]
+usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-exec cmd args {} ;] [-delete]
 
 finds files and dirs that satisfy conditions (predicates)
+
+options:
+  -maxdepth NUMBER     walk no deeper than NUMBER levels
+  -output PATH         output to file instead of stdout
 
 predicates:
   -mtime DAYS          if DAYS is negative: modified within DAYS days, 

@@ -62,7 +62,8 @@ class Tok:
         cdup,
         first,
         last,
-    ) = range(32)
+        output,
+    ) = range(33)
     
 m = {
     "(": Tok.op_par,
@@ -98,6 +99,7 @@ m = {
     "-cdup": Tok.cdup,
     "-first": Tok.first,
     "-last": Tok.last,
+    "-output": Tok.output,
 }
 
 inv_m = {v:k for k,v in m.items()}
@@ -154,15 +156,32 @@ class ActionDelete:
 
 class ActionPrint:
 
-    def __init__(self, cdup):
+    def __init__(self, cdup, output):
         self._cdup = cdup
+        self._output = output
+        self._f = None
 
     def exec(self, root, name, path, is_dir):
         path = cdup_path(path, self._cdup)
+
         if os.path.isabs(root):
-            print_utf8(path)
+            path_ = path
         else:
-            print_utf8(os.path.relpath(path, os.getcwd()))
+            path_ = os.path.relpath(path, os.getcwd())
+
+        if self._output is None:
+            print_utf8(path_)
+        else:
+            f = self._f
+            if f is None:
+                f = open(self._output, "w", encoding='utf-8')
+                self._f = f
+            f.write(path_ + "\n")
+            
+    def flush(self):
+        f = self._f
+        if f:
+            f.close()
 
 def index_of_token(tokens, type):
     for i, tok in enumerate(tokens):
@@ -227,8 +246,10 @@ def parse_args(args = None):
         cdup = int(token.cont)
     """
     cdup = to_int_or_zero(pop_named_token_and_value(tokens, Tok.cdup))
+
+    output = pop_named_token_and_value(tokens, Tok.output)
     
-    action = ActionPrint(cdup)
+    action = ActionPrint(cdup, output)
 
     ix = index_of_token(tokens, Tok.delete)
     if ix is not None:
@@ -247,7 +268,7 @@ def parse_args(args = None):
 
     paths = []
     pop_paths(tokens, paths, 0)
-    pop_paths(tokens, paths, -1)
+    #pop_paths(tokens, paths, -1)
 
     """
     i = len(tokens)-1
@@ -732,9 +753,13 @@ def expr_to_pred(expr):
     return tree, lambda name, path, is_dir: tree.eval(name, path, is_dir, cache)
 
 def print_help():
-    print("""usage: pyfind [conditions] [-exec cmd args {} ;] [-delete]
+    print("""usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-exec cmd args {} ;] [-delete]
 
 finds files and dirs that satisfy conditions (predicates)
+
+options:
+  -maxdepth NUMBER     walk no deeper than NUMBER levels
+  -output PATH         output to file instead of stdout
 
 predicates:
   -mtime DAYS          if DAYS is negative: modified within DAYS days, 
@@ -808,6 +833,9 @@ def main():
     if collect:
         for item in collected[-extraArgs.last:]:
             action.exec(*item)
+
+    if hasattr(action, 'flush'):
+        action.flush()
 
 def unquote(s):
     if s[0] == '"' and s[-1] == '"':
