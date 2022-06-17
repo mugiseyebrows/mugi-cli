@@ -140,9 +140,10 @@ predicates:
   -bcont PATTERN       same as -cont but PATTERN is binary expression
   -type d              is directory
   -type f              is file
-  -cdup N              print (or take action) parent path (strip N trailing components from path)
-  -first N             print (or take action) on first N found items
-  -last N              print (or take action) on last N found items
+  -cdup NUMBER         print (or perform action) parent path (strip NUMBER 
+                       trailing components from path)
+  -first NUMBER        print (or perform action) first NUMBER found items
+  -last NUMBER         print (or perform action) last NUMBER found items
 
 predicates can be inverted using -not, can be grouped together in boolean expressions 
 using -or and -and and parenthesis
@@ -154,6 +155,12 @@ examples:
   pyfind -iname *.o -delete
   pyfind -iname *.py | pyxargs pywc -l
   pyfind D:\dev -iname .git -type d -cdup 1
+
+note:
+  python treats trailing slash before quotation mark as escape sequence 
+  so in order to input root drive paths you need to not use quotation marks 
+  or double trailing slash
+  correct: "C:\\" C:\ incorrect: "C:\"
 
 
 ```
