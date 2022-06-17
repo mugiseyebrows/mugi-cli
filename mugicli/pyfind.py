@@ -303,7 +303,7 @@ def pop_paths(tokens, paths, index):
         path = tokens[index].cont
         if has_magic(path):
             paths_ = glob_paths_dirs([path])
-            if len(paths_):
+            if len(paths_) == 0:
                 raise ValueError("no such path {}".format(path))
             for p in paths_:
                 paths.append(p)
