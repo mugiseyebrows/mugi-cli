@@ -506,7 +506,8 @@ optional arguments:
 ```
 ## pywc
 ```
-usage: pywc [-h] [-l] [-w] [-m] [-c] [path ...]
+usage: pywc [-h] [-l] [-w] [-m] [-c] [--input INPUT] [--input-stdin]
+               [path ...]
 
 calculates number or lines words, chars and bytes in files
 
@@ -514,14 +515,18 @@ positional arguments:
   path
 
 optional arguments:
-  -h, --help  show this help message and exit
-  -l          print the newline counts
-  -w          print the word counts
-  -m          print the character counts
-  -c          print the byte counts
+  -h, --help            show this help message and exit
+  -l                    print the newline counts
+  -w                    print the word counts
+  -m                    print the character counts
+  -c                    print the byte counts
+  --input INPUT, -i INPUT
+                        read file paths from file
+  --input-stdin         read file paths from stdin
 
 examples:
-  wc -l text.txt
+  pywc -l text.txt
+  pyfind -iname *.txt | pywc -l --input-stdin
 
 ```
 ## pyxargs

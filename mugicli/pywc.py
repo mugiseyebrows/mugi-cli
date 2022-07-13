@@ -5,13 +5,16 @@ import sys
 import re
 import math
 import glob
-from types import prepare_class
-from .shared import glob_paths, read_bytes
+from .shared import glob_paths_files, read_bytes
+from . import read_file_lines, read_stdin_lines, read_stdin_bin
 
 def main():
 
     description='calculates number or lines words, chars and bytes in files'
-    epilog='examples:\n  wc -l text.txt'
+    epilog="""examples:
+  pywc -l text.txt
+  pyfind -iname *.txt | pywc -l --input-stdin
+"""
 
     parser = argparse.ArgumentParser(epilog=epilog, description=description, formatter_class=argparse.RawTextHelpFormatter)
 
@@ -19,6 +22,8 @@ def main():
     parser.add_argument('-w', action='store_true', help='print the word counts')
     parser.add_argument('-m', action='store_true', help='print the character counts')
     parser.add_argument('-c', action='store_true', help='print the byte counts')
+    parser.add_argument('--input', '-i', help='read file paths from file')
+    parser.add_argument('--input-stdin', action='store_true', help='read file paths from stdin')
     parser.add_argument('path', nargs="*")
 
     args = parser.parse_args()
@@ -36,12 +41,17 @@ def main():
         res.append((l, w, m, c, path))
 
     res = []
-    stdin_mode = len(args.path) == 0
+    stdin_mode = len(args.path) == 0 and not args.input_stdin and args.input is None
 
-    paths = glob_paths(args.path)
+    if args.input_stdin:
+        paths = read_stdin_lines(drop_last=True, rstrip=True)
+    elif args.input:
+        paths = read_file_lines(args.input, drop_last=True, rstrip=True)
+    else:
+        paths = glob_paths_files(args.path)
 
     if stdin_mode:
-        data = sys.stdin.buffer.read()
+        data = read_stdin_bin()
         count_lines(data, '', res)
     else:
         for path in paths:
