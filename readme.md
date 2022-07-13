@@ -155,7 +155,7 @@ using -or and -and and parenthesis
 
 examples:
   pyfind -iname *.py -mmin -10
-  pyfind -iname *.cpp -or -iname *.h -not ( -iname moc_* -or -iname ui_* )
+  pyfind -iname *.cpp *.h -not ( -iname moc_* ui_* )
   pyfind -iname *.h -exec pygrep -H class {} ;
   pyfind -iname *.o -delete
   pyfind -iname *.py | pyxargs pywc -l

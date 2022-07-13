@@ -12,6 +12,7 @@ import shutil
 import fnmatch
 from . import parse_size
 from . import walk
+from typing import Any
 
 try:
     import dateutil.parser
@@ -107,10 +108,12 @@ inv_m = {v:k for k,v in m.items()}
 @dataclass
 class T:
     type: int
-    cont: str
+    cont: Any
 
-tok_pred = [Tok.mmin, Tok.iname, Tok.name, Tok.type, Tok.newer, 
-    Tok.newerct, Tok.newermt, Tok.mtime, Tok.ctime,  Tok.size, Tok.cont, Tok.icont, Tok.bcont, Tok.path, Tok.ipath]
+tok_pred_nargs = [Tok.name, Tok.iname, Tok.path, Tok.ipath]
+
+tok_pred = [Tok.mmin, Tok.name, Tok.iname, Tok.type, Tok.newer, 
+    Tok.newerct, Tok.newermt, Tok.mtime, Tok.ctime, Tok.size, Tok.cont, Tok.icont, Tok.bcont, Tok.path, Tok.ipath]
 
 def cdup_path(path, cdup):
     for i in range(cdup):
@@ -219,14 +222,35 @@ def to_int_or_zero(v):
         return 0
     return int(v)
 
+def last_und_index(tokens, i):
+    index = None
+    for i in range(i, len(tokens)):
+        if tokens[i].type == Tok.und:
+            index = i
+        else:
+            return index
+    return index
+
 def parse_args(args = None):
     if args is None:
         args = sys.argv[1:]
     tokens = [T(m[t], t) if t in m else T(Tok.und, t) for t in args]
     for i, tok in enumerate(tokens):
-        if tok.type in tok_pred:
+        if tok is None:
+            continue
+
+        if tok.type in tok_pred_nargs:
+            index = last_und_index(tokens, i+1)
+            cont = [t.cont for t in tokens[i+1:index+1]]
+            tokens[index] = T(Tok.arg, cont=cont)
+            for j in range(i+1, index):
+                tokens[j] = None
+
+        elif tok.type in tok_pred:
             token = tokens[i+1]
             tokens[i+1] = T(Tok.arg, token.cont)
+
+    tokens = [t for t in tokens if t is not None]
 
     """
     maxdepth = 0
@@ -386,13 +410,29 @@ def pred_mmin(name, path, is_dir, arg, cache):
     return total_min > arg
 
 def pred_iname(name, path, is_dir, arg, cache):
-    return fnmatch.fnmatch(name, arg)
+    for pat in arg:
+        if fnmatch.fnmatch(name, pat):
+            return True
+    return False
+
+def pred_name(name, path, is_dir, arg, cache):
+    for pat in arg:
+        if fnmatch.fnmatchcase(name, pat):
+            return True
+    return False
 
 def pred_ipath(name, path, is_dir, arg, cache):
-    return fnmatch.fnmatch(path, arg)
+    for pat in arg:
+        if fnmatch.fnmatch(path, pat):
+            return True
+    return False
 
 def pred_path(name, path, is_dir, arg, cache):
-    return fnmatch.fnmatchcase(path, arg)
+    for pat in arg:
+        if fnmatch.fnmatchcase(path, pat):
+            return True
+    return False
+
 
 def pred_type(name, path, is_dir, arg, cache):
     # todo validate type arg
@@ -625,6 +665,7 @@ class NodePred:
             Tok.type: pred_type,
             Tok.mmin: pred_mmin,
             Tok.iname: pred_iname,
+            Tok.name: pred_name,
             Tok.newer: pred_newer,
             Tok.newermt: pred_newermt,
             Tok.newerct: pred_newerct,
@@ -796,7 +837,7 @@ using -or and -and and parenthesis
 
 examples:
   pyfind -iname *.py -mmin -10
-  pyfind -iname *.cpp -or -iname *.h -not ( -iname moc_* -or -iname ui_* )
+  pyfind -iname *.cpp *.h -not ( -iname moc_* ui_* )
   pyfind -iname *.h -exec pygrep -H class {} ;
   pyfind -iname *.o -delete
   pyfind -iname *.py | pyxargs pywc -l
