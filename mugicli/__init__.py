@@ -269,3 +269,15 @@ def include_exclude(include, exclude, name):
             if fnmatch.fnmatch(name, pat):
                 return False
     return True
+
+def leftpad(s, w):
+    return ("{:>" + str(w) + "}").format(s)
+
+def format_size(s, w):
+    if s > 1024 * 1024 * 1024:
+        return leftpad("{:.1f}G".format(s / (1024 * 1024 * 1024)), w)
+    elif s > 1024 * 1024:
+        return leftpad("{:.1f}M".format(s / (1024 * 1024)), w)
+    elif s > 1024:
+        return leftpad("{:.1f}K".format(s / (1024)), w)
+    return leftpad(str(s), w)

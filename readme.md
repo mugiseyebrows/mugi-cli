@@ -99,16 +99,21 @@ optional arguments:
 ```
 ## pyextstat
 ```
-usage: pyextstat [-h] [-s] [path ...]
+usage: pyextstat [-s] [--help] [-h] [--order {s,c,size,count}] [--skip-git]
+                    [path ...]
 
 prints file extension statistics
 
 positional arguments:
-  path         paths
+  path                  paths
 
 optional arguments:
-  -h, --help   show this help message and exit
-  -s, --short
+  -s, --short           show short list
+  --help                show help
+  -h                    human readable sizes
+  --order {s,c,size,count}, -o {s,c,size,count}
+                        sort order
+  --skip-git
 
 ```
 ## pyfind
