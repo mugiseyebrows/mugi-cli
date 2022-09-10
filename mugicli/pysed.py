@@ -30,7 +30,16 @@ def main():
     
     one_expr = '-e' not in sys.argv[1:]
 
-    parser = argparse.ArgumentParser(description='replaces text')
+    example_text = """examples:
+  echo foobar | pysed s,bar,baz,
+  echo foobar | pysed -e s,bar,baz, -e s,foo,qix,
+  echo %PATH% | pysed s,%USERPROFILE%,^%USERPROFILE^%,r
+
+note:
+  use r flag to disable escape sequences interpretation (as in paths)
+"""
+
+    parser = argparse.ArgumentParser(description="replaces text according to expressions", prog="pysed", epilog=example_text, formatter_class=argparse.RawDescriptionHelpFormatter)
     if one_expr:
         parser.add_argument('expr')
     parser.add_argument('-e', action='append', help='expression')
@@ -51,6 +60,9 @@ def main():
     def replace(line):
         for subj, repl, flags in exprs:
             flags_ = re.IGNORECASE if 'i' in flags else 0
+            if 'r' in flags:
+                subj = subj.replace('\\','\\\\')
+                repl = repl.replace('\\','\\\\')
             line = re.sub(subj, repl, line, flags=flags_)
         return line
 
