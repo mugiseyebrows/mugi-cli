@@ -1,11 +1,23 @@
 import argparse
 from ast import parse
-from matplotlib import pyplot as plt
+try:
+    from matplotlib import pyplot as plt
+except ImportError as e:
+    pass
 import re
 from . import read_file_text, read_stdin_text
 from functools import partial
-import numpy
-import dateutil.parser
+
+try:
+    import numpy
+except ImportError as e:
+    pass
+
+try:
+    import dateutil.parser
+except ImportError as e:
+    pass
+
 from .shared import glob_paths_files
 from dataclasses import dataclass, field
 
