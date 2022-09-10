@@ -5,7 +5,7 @@ import argparse
 import hashlib
 import argparse
 import sys
-from .shared import glob_paths_files, print_utf8, drop_last_empty_line, index_of_int
+from .shared import glob_paths_files, drop_last_empty_line, index_of_int
 import os
 import fnmatch
 
@@ -281,3 +281,8 @@ def format_size(s, w):
     elif s > 1024:
         return leftpad("{:.1f}K".format(s / (1024)), w)
     return leftpad(str(s), w)
+
+def print_utf8(s, end=b'\n'):
+    if not isinstance(end, bytes):
+        end = end.encode('utf-8')
+    sys.stdout.buffer.write(s.encode('utf-8') + end)

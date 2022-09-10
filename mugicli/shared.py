@@ -184,8 +184,3 @@ def parse_args(short, long, short_val, long_val, args):
             return opts, args
         args.pop(0)
     return opts, args
-
-def print_utf8(s, end=b'\n'):
-    if not isinstance(end, bytes):
-        end = end.encode('utf-8')
-    sys.stdout.buffer.write(s.encode('utf-8') + end)

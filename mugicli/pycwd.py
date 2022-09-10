@@ -1,4 +1,4 @@
-from .shared import print_utf8
+from . import print_utf8
 import os
 import sys
 import textwrap

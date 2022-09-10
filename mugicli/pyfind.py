@@ -3,15 +3,14 @@ import os
 import datetime
 import sys
 import re
-from .shared import eprint, glob_paths_dirs, has_magic, run, print_utf8
+from .shared import eprint, glob_paths_dirs, has_magic, run
 import sys
 from dataclasses import dataclass
 from itertools import count
 import subprocess
 import shutil
 import fnmatch
-from . import parse_size
-from . import walk
+from . import parse_size, print_utf8, walk
 from typing import Any
 
 try:

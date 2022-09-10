@@ -3,8 +3,8 @@ import os
 import argparse
 import zipfile
 from zipfile import ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
-from .shared import print_utf8, glob_paths
-from . import read_file_text
+from .shared import glob_paths
+from . import read_file_text, print_utf8
 import sys
 
 # todo read from stdin

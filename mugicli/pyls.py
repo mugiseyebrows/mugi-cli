@@ -1,9 +1,9 @@
 import argparse
-from .shared import glob_paths, print_utf8, has_magic
+from .shared import glob_paths, has_magic
 import glob
 import os
 import sys
-from . import chunks
+from . import chunks, print_utf8
 import math
 from itertools import count
 

@@ -1,7 +1,7 @@
 import os
 import argparse
-from .shared import glob_paths, print_utf8
-from . import read_stdin_text
+from .shared import glob_paths
+from . import read_stdin_text, print_utf8
 import datetime
 
 def print_mtime(path):

@@ -1,5 +1,6 @@
 from mugicli import read_file_lines, read_stdin_lines
-from .shared import glob_paths_files, line_reader, print_lines, has_magic, print_utf8
+from .shared import glob_paths_files, line_reader, print_lines, has_magic
+from . import print_utf8
 import sys
 import argparse
 import re

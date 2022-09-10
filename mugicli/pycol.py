@@ -1,7 +1,7 @@
 import os
 import argparse
-from . import read_file_text, read_stdin_text
-from .shared import glob_paths_files, print_utf8
+from . import read_file_text, read_stdin_text, print_utf8
+from .shared import glob_paths_files
 import re
 
 def print_cols(line, col_numbers):

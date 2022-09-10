@@ -1,7 +1,7 @@
 import argparse
 import sys
-from .shared import glob_paths_files, eprint, print_utf8
-from . import chunks, parse_size
+from .shared import glob_paths_files, eprint
+from . import chunks, parse_size, print_utf8
 
 def print_hex(data, seek):
     for i, chunk in enumerate(chunks(data, 16)):
