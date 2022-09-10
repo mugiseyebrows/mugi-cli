@@ -36,7 +36,7 @@ optional arguments:
 ```
 ## pycol
 ```
-usage: pycol [-h] [-n N [N ...]] [path ...]
+usage: pycol [-h] [-n N [N ...]] [path [path ...]]
 
 extracts and prints specific columns
 
@@ -58,7 +58,7 @@ prints current working directory
 ```
 ## pydos2unix
 ```
-usage: pydos2unix [-h] [path ...]
+usage: pydos2unix [-h] [path [path ...]]
 
 converts line endings from dos to unix (\r\n -> \n)
 
@@ -71,7 +71,7 @@ optional arguments:
 ```
 ## pydu
 ```
-usage: pydu [-s] [-h] [--help] [path ...]
+usage: pydu [-s] [-h] [--help] [path [path ...]]
 
 prints directories sizes
 
@@ -100,7 +100,7 @@ optional arguments:
 ## pyextstat
 ```
 usage: pyextstat [-s] [--help] [-h] [--order {s,c,size,count}] [--skip-git]
-                    [path ...]
+                    [path [path ...]]
 
 prints file extension statistics
 
@@ -171,7 +171,7 @@ note:
 ```
 ## pygrep
 ```
-usage: pygrep [-i] [-o] [-v] [-H] [-h] [-n] [--help] expr [path ...]
+usage: pygrep [-i] [-o] [-v] [-H] [-h] [-n] [--help] expr [path [path ...]]
 
 prints matching lines
 
@@ -192,7 +192,7 @@ optional arguments:
 ```
 ## pyhead
 ```
-usage: pyhead [-h] [-n N] [path ...]
+usage: pyhead [-h] [-n N] [path [path ...]]
 
 prints n lines from head of file
 
@@ -206,7 +206,7 @@ optional arguments:
 ```
 ## pyls
 ```
-usage: pyls [-h] [path ...]
+usage: pyls [-h] [path [path ...]]
 
 lists directory
 
@@ -219,7 +219,7 @@ optional arguments:
 ```
 ## pymd5sum
 ```
-usage: pymd5sum [-h] [path ...]
+usage: pymd5sum [-h] [path [path ...]]
 
 prints md5 hashsum of file
 
@@ -232,7 +232,7 @@ optional arguments:
 ```
 ## pymtime
 ```
-usage: pymtime [-h] [path ...]
+usage: pymtime [-h] [path [path ...]]
 
 prints mtime of file
 
@@ -247,7 +247,7 @@ optional arguments:
 ```
 usage: pymtimestat [-h] [-r RECENT] [-o OLD] [-a AVERAGE]
                       [-i INCLUDE [INCLUDE ...]] [-e EXCLUDE [EXCLUDE ...]]
-                      [path ...]
+                      [path [path ...]]
 
 prints mtime statistics
 
@@ -270,7 +270,7 @@ optional arguments:
 ```
 ## pyplot
 ```
-usage: pyplot [-h] [path ...]
+usage: pyplot [-h] [path [path ...]]
 
 plots data
 
@@ -283,9 +283,9 @@ optional arguments:
 ```
 ## pysed
 ```
-usage: pysed [-h] [-e E] expr [path ...]
+usage: pysed [-h] [-e E] expr [path [path ...]]
 
-replaces text
+replaces text according to expressions
 
 positional arguments:
   expr
@@ -294,6 +294,14 @@ positional arguments:
 optional arguments:
   -h, --help  show this help message and exit
   -e E        expression
+
+examples:
+  echo foobar | pysed s,bar,baz,
+  echo foobar | pysed -e s,bar,baz, -e s,foo,qix,
+  echo %PATH% | pysed s,%USERPROFILE%,^%USERPROFILE^%,r
+
+note:
+  use r flag to disable escape sequences interpretation (as in paths)
 
 ```
 ## pyseq
@@ -307,7 +315,7 @@ seq FIRST INCREMENT LAST
 ```
 ## pysha1sum
 ```
-usage: pysha1sum [-h] [path ...]
+usage: pysha1sum [-h] [path [path ...]]
 
 prints sha1 hashsum of file
 
@@ -320,7 +328,7 @@ optional arguments:
 ```
 ## pysha224sum
 ```
-usage: pysha224sum [-h] [path ...]
+usage: pysha224sum [-h] [path [path ...]]
 
 prints sha224 hashsum of file
 
@@ -333,7 +341,7 @@ optional arguments:
 ```
 ## pysha256sum
 ```
-usage: pysha256sum [-h] [path ...]
+usage: pysha256sum [-h] [path [path ...]]
 
 prints sha256 hashsum of file
 
@@ -346,7 +354,7 @@ optional arguments:
 ```
 ## pysha384sum
 ```
-usage: pysha384sum [-h] [path ...]
+usage: pysha384sum [-h] [path [path ...]]
 
 prints sha384 hashsum of file
 
@@ -359,7 +367,7 @@ optional arguments:
 ```
 ## pysha512sum
 ```
-usage: pysha512sum [-h] [path ...]
+usage: pysha512sum [-h] [path [path ...]]
 
 prints sha512 hashsum of file
 
@@ -373,7 +381,7 @@ optional arguments:
 ## pysort
 ```
 usage: pysort [-h] [--numeric-sort] [--reverse] [--random-sort] [--unique]
-                 [path ...]
+                 [path [path ...]]
 
 sorts lines
 
@@ -404,7 +412,7 @@ optional arguments:
 ```
 ## pytail
 ```
-usage: pytail [-h] [-n N] [path ...]
+usage: pytail [-h] [-n N] [path [path ...]]
 
 prints n lines from tail of file
 
@@ -461,6 +469,24 @@ optional arguments:
   -d D        datetime or relative time in format [+-]NUM[d|h|m|s] format
 
 ```
+## pytr
+```
+usage: pytr [-h] match replacement
+
+reads stdin and replaces chars with another chars
+
+positional arguments:
+  match        chars to find
+  replacement  replacement chars
+
+optional arguments:
+  -h, --help   show this help message and exit
+
+examples:
+  echo %PATH% | pytr ';' '\n' | pygrep -i conda | pytr '\n' ';'
+  echo %PATH% | pytr ';' '\n' | pygrep -i conda | pysed s,%USERPROFILE%,^%USERPROFILE^%,r | pytr '\n' ';'
+
+```
 ## pytree
 ```
 usage: pytree [-h] [-L LEVEL] [-i INCLUDE [INCLUDE ...]]
@@ -482,7 +508,7 @@ optional arguments:
 ```
 ## pyuniq
 ```
-usage: pyuniq [-h] [--count] [--repeated] [--unique] [path ...]
+usage: pyuniq [-h] [--count] [--repeated] [--unique] [path [path ...]]
 
 prints unique or nonunique lines from sorted array of lines
 
@@ -498,7 +524,7 @@ optional arguments:
 ```
 ## pyunix2dos
 ```
-usage: pyunix2dos [-h] [path ...]
+usage: pyunix2dos [-h] [path [path ...]]
 
 converts line endings from unix to dos (\n -> \r\n)
 
@@ -512,7 +538,7 @@ optional arguments:
 ## pywc
 ```
 usage: pywc [-h] [-l] [-w] [-m] [-c] [--input INPUT] [--input-stdin]
-               [path ...]
+               [path [path ...]]
 
 calculates number or lines words, chars and bytes in files
 
@@ -550,7 +576,7 @@ optional arguments:
 ```
 ## pyxxd
 ```
-usage: pyxxd [-h] [-s SEEK] [-l LEN] [path ...]
+usage: pyxxd [-h] [-s SEEK] [-l LEN] [path [path ...]]
 
 prints file as hex
 
@@ -567,7 +593,7 @@ optional arguments:
 ```
 usage: pyzip [-h] [-o OUTPUT] [-m {deflate,d,lzma,l,bzip2,b,store,s}]
                 [-l L] [--base BASE] [--dir DIR] [--list LIST] [-s] [-v]
-                {a,x,l} zip [sources ...]
+                {a,x,l} zip [sources [sources ...]]
 
 appends, extracts and list contents of zip archive
 
