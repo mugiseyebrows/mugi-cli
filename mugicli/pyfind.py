@@ -63,7 +63,8 @@ class Tok:
         first,
         last,
         output,
-    ) = range(33)
+        abspath,
+    ) = range(34)
     
 m = {
     "(": Tok.op_par,
@@ -100,6 +101,7 @@ m = {
     "-first": Tok.first,
     "-last": Tok.last,
     "-output": Tok.output,
+    "-abspath": Tok.abspath
 }
 
 inv_m = {v:k for k,v in m.items()}
@@ -116,7 +118,10 @@ tok_pred = [Tok.mmin, Tok.name, Tok.iname, Tok.type, Tok.newer,
 
 def cdup_path(path, cdup):
     for i in range(cdup):
-        path = os.path.dirname(path)
+        if '/' in path or '\\' in path:
+            path = os.path.dirname(path)
+        else:
+            path = os.path.dirname(os.path.realpath(path))
     return path
 
 def split_list(vs, sep):
@@ -158,15 +163,18 @@ class ActionDelete:
 
 class ActionPrint:
 
-    def __init__(self, cdup, output):
+    def __init__(self, cdup, output, abspath):
         self._cdup = cdup
         self._output = output
         self._f = None
+        self._abspath = abspath
 
     def exec(self, root, name, path, is_dir):
         path = cdup_path(path, self._cdup)
 
-        if os.path.isabs(root):
+        if self._abspath:
+            path_ = os.path.realpath(path)
+        elif os.path.isabs(root):
             path_ = path
         else:
             path_ = os.path.relpath(path, os.getcwd())
@@ -277,8 +285,14 @@ def parse_args(args = None):
     cdup = to_int_or_zero(pop_named_token_and_value(tokens, Tok.cdup))
 
     output = pop_named_token_and_value(tokens, Tok.output)
+
+    abspath = False
+    ix = index_of_token(tokens, Tok.abspath)
+    if ix is not None:
+        tokens.pop(ix)
+        abspath = True
     
-    action = ActionPrint(cdup, output)
+    action = ActionPrint(cdup, output, abspath)
 
     ix = index_of_token(tokens, Tok.delete)
     if ix is not None:
@@ -806,6 +820,7 @@ finds files and dirs that satisfy conditions (predicates)
 options:
   -maxdepth NUMBER     walk no deeper than NUMBER levels
   -output PATH         output to file instead of stdout
+  -abspath             print absolute paths
 
 predicates:
   -mtime DAYS          if DAYS is negative: modified within DAYS days, 
@@ -841,6 +856,7 @@ examples:
   pyfind -iname *.o -delete
   pyfind -iname *.py | pyxargs pywc -l
   pyfind D:\\dev -iname .git -type d -cdup 1
+  pyfind -iname *.dll -cdup 1 -abspath | pysetpath -o env.bat
 
 note:
   python treats trailing slash before quotation mark as escape sequence 
