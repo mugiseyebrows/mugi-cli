@@ -33,6 +33,7 @@ setup(
             'pyplot = mugicli.pyplot:main',
             'pysed = mugicli.pysed:main',
             'pyseq = mugicli.pyseq:main',
+            'pysetpath = mugicli.pysetpath:main',
             'pysha1sum = mugicli.pysha1sum:main',
             'pysha224sum = mugicli.pysha224sum:main',
             'pysha256sum = mugicli.pysha256sum:main',
