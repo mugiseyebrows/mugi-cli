@@ -4,8 +4,8 @@ from . import read_stdin_text, print_utf8
 def main():
 
     example_text = """examples:
-  echo %PATH% | pytr ';' '\\n' | pygrep -i conda | pytr '\\n' ';'
-  echo %PATH% | pytr ';' '\\n' | pygrep -i conda | pysed s,%USERPROFILE%,^%USERPROFILE^%,r | pytr '\\n' ';'
+  echo %PATH% | pytr ";" "\\n" | pygrep -i conda | pytr "\\n" ";"
+  echo %PATH% | pytr ";" "\\n" | pygrep -i conda | pysed s,%USERPROFILE%,^%USERPROFILE^%,r | pytr "\\n" ";"
 """
 
     parser = argparse.ArgumentParser(description="reads stdin and replaces chars with another chars", prog="pytr", epilog=example_text, formatter_class=argparse.RawDescriptionHelpFormatter)
