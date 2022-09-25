@@ -12,7 +12,7 @@ Aim of this package is to fix all this inconviniences.
 
 1. `mugicli` talks in native paths, pipe it into other applications without doubt
 2. `python -m pip install mugicli` and you're done (assuming `Scripts` in `%PATH%`)
-3. `mugicli` is writen in less than `3k lines` of `python` code, you can easily change it
+3. `mugicli` is writen in less than `5k lines` of `python` code, you can easily change it
 
 Utils support many of gnu utils arguments, but not all of them as it is not drop-in replacement and will never be.
 
@@ -50,10 +50,12 @@ optional arguments:
 ```
 ## pycwd
 ```
-usage: pycwd [-h] [--help]
+usage: pycwd [-h]
 
 prints current working directory
 
+optional arguments:
+  -h, --help  show this help message and exit
 
 ```
 ## pydos2unix
@@ -125,6 +127,7 @@ finds files and dirs that satisfy conditions (predicates)
 options:
   -maxdepth NUMBER     walk no deeper than NUMBER levels
   -output PATH         output to file instead of stdout
+  -append              append to file instead of rewrite
   -abspath             print absolute paths
 
 predicates:
@@ -154,6 +157,12 @@ predicates:
 predicates can be inverted using -not, can be grouped together in boolean expressions 
 using -or and -and and parenthesis
 
+binds:
+  {}         path to file
+  {path}     path to file
+  {nameext}  name with extension
+  {name}     name without extension
+
 examples:
   pyfind -iname *.py -mmin -10
   pyfind -iname *.cpp *.h -not ( -iname moc_* ui_* )
@@ -162,12 +171,16 @@ examples:
   pyfind -iname *.py | pyxargs pywc -l
   pyfind D:\dev -iname .git -type d -cdup 1
   pyfind -iname *.dll -cdup 1 -abspath | pysetpath -o env.bat
+  pyfind -iname *.mp3 -exec ffmpeg -i {} {name}.wav ;
 
 note:
+  ";" in cmd does not work as command separator so you dont have to escape it
+  although you can if you want.
   python treats trailing slash before quotation mark as escape sequence 
   so in order to input root drive paths you need to not use quotation marks 
   or double trailing slash
   correct: "C:\\" C:\ incorrect: "C:\"
+  
 
 
 ```
@@ -398,6 +411,22 @@ optional arguments:
   -h, --help  show this help message and exit
 
 ```
+## pysleep
+```
+usage: pysleep [-h] time
+
+sleeps for TIME seconds
+
+positional arguments:
+  time
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+examples:
+  pysleep 1m && taskkill 
+
+```
 ## pysort
 ```
 usage: pysort [-h] [--numeric-sort] [--reverse] [--random-sort] [--unique]
@@ -503,8 +532,8 @@ optional arguments:
   -h, --help   show this help message and exit
 
 examples:
-  echo %PATH% | pytr ';' '\n' | pygrep -i conda | pytr '\n' ';'
-  echo %PATH% | pytr ';' '\n' | pygrep -i conda | pysed s,%USERPROFILE%,^%USERPROFILE^%,r | pytr '\n' ';'
+  echo %PATH% | pytr ";" "\n" | pygrep -i conda | pytr "\n" ";"
+  echo %PATH% | pytr ";" "\n" | pygrep -i conda | pysed s,%USERPROFILE%,^%USERPROFILE^%,r | pytr "\n" ";"
 
 ```
 ## pytree
