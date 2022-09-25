@@ -39,6 +39,7 @@ setup(
             'pysha256sum = mugicli.pysha256sum:main',
             'pysha384sum = mugicli.pysha384sum:main',
             'pysha512sum = mugicli.pysha512sum:main',
+            'pysleep = mugicli.pysleep:main',
             'pysort = mugicli.pysort:main',
             'pystart = mugicli.pystart:main',
             'pytail = mugicli.pytail:main',
