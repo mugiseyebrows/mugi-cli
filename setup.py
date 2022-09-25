@@ -13,7 +13,7 @@ setup(
     description='Shell utilities resembling coreutils and findutils, small extendable and windows-friendly',
     long_description = long_description,
     long_description_content_type = 'text/markdown',
-    install_requires = ['python-dateutil'],
+    install_requires = ['python-dateutil','bashrange'],
     entry_points={
         'console_scripts': [
             'pycat = mugicli.pycat:main',

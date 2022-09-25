@@ -12,6 +12,7 @@ import shutil
 import fnmatch
 from . import parse_size, print_utf8, walk
 from typing import Any
+from bashrange import expand_args
 
 try:
     import dateutil.parser
@@ -65,8 +66,10 @@ class Tok:
         last,
         output,
         abspath,
-        append
-    ) = range(36)
+        append,
+        namebind,
+        nameextbind,
+    ) = range(38)
     
 m = {
     "(": Tok.op_par,
@@ -93,6 +96,9 @@ m = {
     "-delete": Tok.delete,
     ";": Tok.semicolon,
     "{}": Tok.pathbind,
+    "{path}": Tok.pathbind,
+    "{name}": Tok.namebind,
+    "{nameext}": Tok.nameextbind,
     "-icont": Tok.icont,
     "-cont": Tok.cont,
     "-bcont": Tok.bcont,
@@ -159,7 +165,16 @@ class ActionExec(ActionBase):
 
     def exec(self, root, name, path, is_dir):
         path = cdup_path(path, self._cdup)
-        exprs = [t.cont.replace('{}', path) for t in self._tokens]
+        nameext = os.path.basename(path)
+        name = os.path.splitext(nameext)[0]
+        exprs = [
+            t.cont
+                .replace("{nameext}", nameext)
+                .replace("{name}", name) 
+                .replace("{path}", path)
+                .replace("{}", path)
+            for t in self._tokens
+        ]
         for expr in split_list(exprs, '&&'):
             run(expr)
 
@@ -846,6 +861,12 @@ predicates:
 predicates can be inverted using -not, can be grouped together in boolean expressions 
 using -or and -and and parenthesis
 
+binds:
+  {}         path to file
+  {path}     path to file
+  {nameext}  name with extension
+  {name}     name without extension
+
 examples:
   pyfind -iname *.py -mmin -10
   pyfind -iname *.cpp *.h -not ( -iname moc_* ui_* )
@@ -854,6 +875,7 @@ examples:
   pyfind -iname *.py | pyxargs pywc -l
   pyfind D:\\dev -iname .git -type d -cdup 1
   pyfind -iname *.dll -cdup 1 -abspath | pysetpath -o env.bat
+  pyfind -iname *.mp3 -exec ffmpeg -i {} {name}.wav ;
 
 note:
   ";" in cmd does not work as command separator so you dont have to escape it
@@ -865,9 +887,11 @@ note:
   
 """)
 
+
+
 def main():
 
-    args = sys.argv[1:]
+    args = expand_args()
     if '-h' in args or '--help' in args:
         print_help()
         return
