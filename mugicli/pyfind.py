@@ -54,6 +54,7 @@ class Tok:
         exec,
         delete,
         semicolon,
+        slashsemicolon,
         pathbind,
         icont,
         cont,
@@ -64,7 +65,8 @@ class Tok:
         last,
         output,
         abspath,
-    ) = range(34)
+        append
+    ) = range(36)
     
 m = {
     "(": Tok.op_par,
@@ -101,7 +103,9 @@ m = {
     "-first": Tok.first,
     "-last": Tok.last,
     "-output": Tok.output,
-    "-abspath": Tok.abspath
+    "-append": Tok.append,
+    "-abspath": Tok.abspath,
+    "\\;": Tok.slashsemicolon
 }
 
 inv_m = {v:k for k,v in m.items()}
@@ -135,10 +139,23 @@ def split_list(vs, sep):
     yield res
     res = []
 
-class ActionExec:
-    def __init__(self, tokens, cdup):
-        self._tokens = tokens
+class ActionBase:
+
+    def __init__(self):
+        self._cdup = None
+        self._output = None
+        self._abspath = None
+
+    def setOptions(self, cdup, output, abspath, append):
         self._cdup = cdup
+        self._output = output
+        self._abspath = abspath
+        self._append = append
+
+class ActionExec(ActionBase):
+    def __init__(self, tokens):
+        super().__init__()
+        self._tokens = tokens
 
     def exec(self, root, name, path, is_dir):
         path = cdup_path(path, self._cdup)
@@ -146,10 +163,7 @@ class ActionExec:
         for expr in split_list(exprs, '&&'):
             run(expr)
 
-class ActionDelete:
-
-    def __init__(self, cdup):
-        self._cdup = cdup
+class ActionDelete(ActionBase):
 
     def exec(self, root, name, path, is_dir):
         path = cdup_path(path, self._cdup)
@@ -161,13 +175,11 @@ class ActionDelete:
             os.remove(path)
 
 
-class ActionPrint:
+class ActionPrint(ActionBase):
 
-    def __init__(self, cdup, output, abspath):
-        self._cdup = cdup
-        self._output = output
+    def __init__(self):
+        super().__init__()
         self._f = None
-        self._abspath = abspath
 
     def exec(self, root, name, path, is_dir):
         path = cdup_path(path, self._cdup)
@@ -187,7 +199,11 @@ class ActionPrint:
         else:
             f = self._f
             if f is None:
-                f = open(self._output, "w", encoding='utf-8')
+                if self._append:
+                    mode = "a"
+                else:
+                    mode = "w"
+                f = open(self._output, mode, encoding='utf-8')
                 self._f = f
             try:
                 f.write(path_ + "\n")
@@ -209,6 +225,14 @@ class ExtraArgs:
     maxdepth: int
     first: int
     last: int
+
+def pop_named_token(tokens, t):
+    ix = index_of_token(tokens, t)
+    if ix is None:
+        return False
+    if ix is not None:
+        tokens.pop(ix)
+        return True
 
 def pop_named_token_and_value(tokens, t):
     ix = index_of_token(tokens, t)
@@ -238,6 +262,11 @@ def last_und_index(tokens, i):
             return index
     return index
 
+def first_truthy(*args):
+        for arg in args:
+            if arg:
+                return arg
+
 def parse_args(args = None):
     if args is None:
         args = sys.argv[1:]
@@ -259,14 +288,20 @@ def parse_args(args = None):
 
     tokens = [t for t in tokens if t is not None]
 
-    """
-    maxdepth = 0
-    ix_maxdepth = index_of_token(tokens, Tok.maxdepth)
-    if ix_maxdepth is not None:
-        tokens.pop(ix_maxdepth)
-        token = tokens.pop(ix_maxdepth)
-        maxdepth = int(token.cont)
-    """
+    action = ActionPrint()
+
+    ix_exec = index_of_token(tokens, Tok.exec)
+    ix_semicolon = index_of_token(tokens, Tok.semicolon)
+    ix_slashsemicolon = index_of_token(tokens, Tok.slashsemicolon)
+
+    if ix_exec is not None:
+        if ix_semicolon is None and ix_slashsemicolon is None:
+            raise ValueError("Invalid exec expression: semicolon not found")
+        ix_tail = first_truthy(ix_semicolon, ix_slashsemicolon)
+        exec_tokens = tokens[ix_exec+1:ix_tail]
+        action = ActionExec(exec_tokens)
+        tokens = tokens[:ix_exec] + tokens[ix_tail+1:]
+        #print("exec_tokens", exec_tokens)
 
     maxdepth = to_int_or_zero(pop_named_token_and_value(tokens, Tok.maxdepth))
     
@@ -274,62 +309,23 @@ def parse_args(args = None):
 
     last = to_int(pop_named_token_and_value(tokens, Tok.last))
     
-    """
-    cdup = 0
-    ix = index_of_token(tokens, Tok.cdup)
-    if ix is not None:
-        tokens.pop(ix)
-        token = tokens.pop(ix)
-        cdup = int(token.cont)
-    """
+    delete = pop_named_token(tokens, Tok.delete)
+    if delete:
+        action = ActionDelete()
+
     cdup = to_int_or_zero(pop_named_token_and_value(tokens, Tok.cdup))
 
     output = pop_named_token_and_value(tokens, Tok.output)
 
-    abspath = False
-    ix = index_of_token(tokens, Tok.abspath)
-    if ix is not None:
-        tokens.pop(ix)
-        abspath = True
-    
-    action = ActionPrint(cdup, output, abspath)
+    abspath = pop_named_token(tokens, Tok.abspath)
 
-    ix = index_of_token(tokens, Tok.delete)
-    if ix is not None:
-        tokens.pop(ix)
-        action = ActionDelete(cdup)
+    append = pop_named_token(tokens, Tok.append)
     
-    ix_exec = index_of_token(tokens, Tok.exec)
-    ix_semicolon = index_of_token(tokens, Tok.semicolon)
-
-    if ix_exec is not None:
-        if ix_semicolon is None:
-            raise ValueError("Invalid exec expression: semicolon not found")
-        exec_tokens = tokens[ix_exec+1:ix_semicolon]
-        action = ActionExec(exec_tokens, cdup)
-        tokens = tokens[:ix_exec] + tokens[ix_semicolon+1:]
+    action.setOptions(cdup, output, abspath, append)
 
     paths = []
     pop_paths(tokens, paths, 0)
-    #pop_paths(tokens, paths, -1)
-
-    """
-    i = len(tokens)-1
-    while i > -1 and tokens[i].type == Tok.und:
-        i -= 1
-    tokens, paths1 = tokens[:i+1], tokens[i+1:]
-    i = 0
-    while i < len(tokens) and tokens[i].type == Tok.und:
-        i += 1
-    paths2 = []
-    if i > 0:
-        paths2, tokens = tokens[:i], tokens[i:]
-    """
-
-    #expr = tokens
-    #paths = [e.cont for e in paths1 + paths2]
-
-    #print('expr, paths', expr, paths)
+    pop_paths(tokens, paths, -1)
 
     extraArgs = ExtraArgs(maxdepth=maxdepth, first=first, last=last)
 
@@ -820,6 +816,7 @@ finds files and dirs that satisfy conditions (predicates)
 options:
   -maxdepth NUMBER     walk no deeper than NUMBER levels
   -output PATH         output to file instead of stdout
+  -append              append to file instead of rewrite
   -abspath             print absolute paths
 
 predicates:
@@ -859,10 +856,13 @@ examples:
   pyfind -iname *.dll -cdup 1 -abspath | pysetpath -o env.bat
 
 note:
+  ";" in cmd does not work as command separator so you dont have to escape it
+  although you can if you want.
   python treats trailing slash before quotation mark as escape sequence 
   so in order to input root drive paths you need to not use quotation marks 
   or double trailing slash
   correct: "C:\\\\" C:\\ incorrect: "C:\\"
+  
 """)
 
 def main():
