@@ -2,6 +2,7 @@ import sys
 from .shared import print_lines, glob_paths, read_lines
 import re
 import argparse
+from bashrange import expand_args
 
 # todo backreferences
 # todo -i
@@ -45,7 +46,7 @@ note:
     parser.add_argument('-e', action='append', help='expression')
     parser.add_argument('path', nargs='*')
     
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
 
     if one_expr:
         exprs = parse_exprs([args.expr])

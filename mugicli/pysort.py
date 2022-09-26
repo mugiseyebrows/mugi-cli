@@ -4,6 +4,7 @@ from .shared import eprint, glob_paths, read_lines, print_lines
 import random
 import re
 from functools import cmp_to_key
+from bashrange import expand_args
 
 NUM_RX = r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?)'
 
@@ -38,7 +39,7 @@ def main():
     parser.add_argument('--unique', '-u', action='store_true')
     parser.add_argument('path', nargs="*")
 
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
     paths = glob_paths(args.path)
     lines = read_lines(paths)
     

@@ -2,6 +2,7 @@ import argparse
 import sys
 from .shared import glob_paths_files, eprint
 from . import chunks, parse_size, print_utf8
+from bashrange import expand_args
 
 def print_hex(data, seek):
     for i, chunk in enumerate(chunks(data, 16)):
@@ -23,7 +24,7 @@ def main():
     parser.add_argument('-s','--seek', help='start at offset')
     parser.add_argument('-l','--len', help='number of bytes to print')
 
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
 
     if args.seek is None:
         seek = 0

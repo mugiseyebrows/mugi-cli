@@ -8,6 +8,7 @@ import sys
 from .shared import glob_paths_files, drop_last_empty_line, index_of_int
 import os
 import fnmatch
+from bashrange import expand_args
 
 def decode_bytes(data):
     try:
@@ -79,7 +80,7 @@ def convertlineterm(to_what):
 
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('path', nargs='*')
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
     paths = glob_paths_files(args.path)
 
     stdin_mode = len(args.path) == 0
@@ -116,7 +117,7 @@ def files_hash(paths, from_stdin, alg):
 def files_hash_main(alg):
     parser = argparse.ArgumentParser(description='prints {} hashsum of file'.format(alg))
     parser.add_argument('path', nargs='*')
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
     from_stdin = len(args.path) == 0
     paths = glob_paths_files(args.path)
     files_hash(paths, from_stdin, alg)

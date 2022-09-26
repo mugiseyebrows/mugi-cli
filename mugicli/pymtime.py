@@ -3,6 +3,7 @@ import argparse
 from .shared import glob_paths
 from . import read_stdin_text, print_utf8
 import datetime
+from bashrange import expand_args
 
 def print_mtime(path):
     try:
@@ -13,7 +14,7 @@ def print_mtime(path):
 def main():
     parser = argparse.ArgumentParser(description='prints mtime of file')
     parser.add_argument('path', nargs='*')
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
     
     if len(args.path) == 0:
         for line in read_stdin_text().split('\n'):

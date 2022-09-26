@@ -2,6 +2,7 @@ import re
 import os
 import sys
 from .shared import parse_args
+from bashrange import expand_args
 
 """
 def parse_args(args):
@@ -47,7 +48,7 @@ def main():
 
     #print(sys.argv)
 
-    opts, args = parse_args(['e','n','h'],['help'],[],[],sys.argv[1:])
+    opts, args = parse_args(['e','n','h'],['help'],[],[], expand_args())
 
     if opts['h'] or opts['help']:
         print_help()

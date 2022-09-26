@@ -2,6 +2,7 @@ import os
 import subprocess
 import argparse
 import textwrap
+from bashrange import expand_args
 
 def get_output_text(cmd):
     outp = subprocess.check_output(cmd.split(' '))
@@ -63,7 +64,7 @@ def test_pygrep():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('prog', choices=['pygrep'])
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
     if args.prog == 'pygrep':
         test_pygrep()
 

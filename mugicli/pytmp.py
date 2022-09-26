@@ -4,9 +4,9 @@ import re
 import json
 import tempfile
 import os
-import shutil
 from .shared import print_bytes
 import textwrap
+from bashrange import expand_args
 
 # todo clean
 # todo env PYTMP_DIR
@@ -40,7 +40,7 @@ def main():
     parser.add_argument('-o', '--output', help='output data to file')
     parser.add_argument('--suffix', default='.tmp')
 
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
 
     pathmap = read_pathmap()
 

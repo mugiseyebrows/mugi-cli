@@ -5,7 +5,7 @@ import os
 import sys
 from . import chunks, print_utf8
 import math
-from itertools import count
+from bashrange import expand_args
 
 def tabulate(lens, rows, columns):
     data = []
@@ -48,7 +48,7 @@ def print_group(items, isatty):
 def main():
     parser = argparse.ArgumentParser(description='lists directory')
     parser.add_argument('path', nargs='*')
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
 
     if len(args.path) == 0:
         paths = ['.']

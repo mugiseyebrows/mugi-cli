@@ -6,6 +6,7 @@ import glob
 import os
 from .shared import eprint, has_magic
 from . import parse_time_arg
+from bashrange import expand_args
 
 def set_mtime(filename, mtime):
     stat = os.stat(filename)
@@ -17,7 +18,7 @@ def main():
     parser.add_argument('path', nargs='+', help='target path')
     parser.add_argument('-d', help='datetime or relative time in format [+-]NUM[d|h|m|s] format')
 
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
 
     if args.d:
         d = parse_time_arg(args.d)

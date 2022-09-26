@@ -896,7 +896,7 @@ def main():
         print_help()
         return
 
-    expr, paths, action, extraArgs = parse_args()
+    expr, paths, action, extraArgs = parse_args(expand_args())
     tree, pred = expr_to_pred(expr)
     if len(paths) == 0:
         paths.append(".")

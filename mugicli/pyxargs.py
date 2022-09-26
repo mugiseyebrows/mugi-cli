@@ -4,6 +4,7 @@ import subprocess
 from .shared import eprint, run, parse_args
 from . import read_stdin_text, chunks
 import textwrap
+from bashrange import expand_args
 
 def read_stdin_args():
     text = read_stdin_text()
@@ -32,7 +33,7 @@ def print_help():
     """))
 
 def main():
-    opts, args1 = parse_args(['h'],['help'],['L','I'],[], sys.argv[1:])
+    opts, args1 = parse_args(['h'],['help'],['L','I'],[], expand_args())
     if opts['h'] or opts['help']:
         print_help()
         return

@@ -7,6 +7,7 @@ import datetime
 import json
 import fnmatch
 from . import parse_time_arg, include_exclude
+from bashrange import expand_args
 
 def median(vs):
     if len(vs) % 2:
@@ -27,7 +28,7 @@ def main():
     parser.add_argument('-i', '--include', nargs='+', help='include files glob')
     parser.add_argument('-e', '--exclude', nargs='+', help='include files glob')
 
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
 
     #print(args)
 

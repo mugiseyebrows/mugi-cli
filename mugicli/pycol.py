@@ -3,6 +3,7 @@ import argparse
 from . import read_file_text, read_stdin_text, print_utf8
 from .shared import glob_paths_files
 import re
+from bashrange import expand_args
 
 def print_cols(line, col_numbers):
     cols = re.split('\\s+', line)
@@ -13,7 +14,7 @@ def main():
     parser = argparse.ArgumentParser(description='extracts and prints specific columns') # todo separators
     parser.add_argument('path', nargs='*')
     parser.add_argument('-n', type=int, nargs='+', help='column number') # todo range expr
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
     if len(args.path) == 0:
         for line in read_stdin_text().split('\n'):
             print_cols(line, args.n)

@@ -1,12 +1,8 @@
-import enum
-import fileinput
 import argparse
-import sys
 import re
-import math
-import glob
 from .shared import glob_paths_files, read_bytes
 from . import read_file_lines, read_stdin_lines, read_stdin_bin
+from bashrange import expand_args
 
 def main():
 
@@ -26,7 +22,7 @@ def main():
     parser.add_argument('--input-stdin', action='store_true', help='read file paths from stdin')
     parser.add_argument('path', nargs="*")
 
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
 
     def count_lines(data, path, res):
         text = ''

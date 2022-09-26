@@ -1,10 +1,9 @@
 from mugicli import read_file_lines, read_stdin_lines
 from .shared import glob_paths_files, line_reader, print_lines, has_magic
 from . import print_utf8
-import sys
 import argparse
 import re
-import glob
+from bashrange import expand_args
 
 # todo binary files
 
@@ -21,7 +20,7 @@ def main():
     parser.add_argument('--help', action='help')
     parser.add_argument('path', nargs='*')
 
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
 
     if args.with_filename:
         print_filename = True

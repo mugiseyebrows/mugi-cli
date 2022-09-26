@@ -6,13 +6,14 @@ import glob
 import os
 import sys
 from .shared import glob_paths, eprint
+from bashrange import expand_args
 
 def main():
     parser = argparse.ArgumentParser(description='prints file to stdout')
     parser.add_argument('path', nargs='+')
     parser.add_argument('--text', '-t', action='store_true')
 
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
 
     paths = glob_paths(args.path)
 

@@ -20,6 +20,7 @@ except ImportError as e:
 
 from .shared import glob_paths_files
 from dataclasses import dataclass, field
+from bashrange import expand_args
 
 def parse_date_num(rx, line):
     m = rx.match(line)
@@ -52,7 +53,7 @@ class State:
 def main():
     parser = argparse.ArgumentParser(description='plots data')
     parser.add_argument('path', nargs='*')
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
     
     state = State()
 

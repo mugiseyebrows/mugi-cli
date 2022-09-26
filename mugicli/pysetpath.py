@@ -1,5 +1,6 @@
 import argparse
 from . import read_stdin_lines
+from bashrange import expand_args
 
 def uniq_ordered(items):
     res = []
@@ -19,7 +20,7 @@ def main():
     parser.add_argument('-a', '--append', action='store_true')
     parser.add_argument('-p', '--prepend', action='store_true')
     parser.add_argument('-r', '--reset', action='store_true')
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
     lines = uniq_ordered([l for l in read_stdin_lines(drop_last = True, rstrip = True) if l != ''])
 
     if args.reset:

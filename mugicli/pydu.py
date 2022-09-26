@@ -5,6 +5,7 @@ from collections import defaultdict
 from itertools import count, zip_longest
 import re
 from .shared import glob_paths
+from bashrange import expand_args
 
 # todo cleanup unused code
 # todo human readible
@@ -170,7 +171,7 @@ def main():
     parser.add_argument('path', nargs='*', help='path to calculate')
     parser.add_argument('--help', action='help')
 
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
 
     paths = glob_paths(args.path)
     if len(paths) == 0:

@@ -2,6 +2,7 @@ import argparse
 import os
 import re
 from . import print_utf8, walk, include_exclude
+from bashrange import expand_args
 
 def split_path(path):
     parts = re.split('[/\\\\]', path)
@@ -138,7 +139,7 @@ def main():
     parser.add_argument('-e', '--exclude', nargs='+', help='include files globs')
     parser.add_argument('path')
 
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
     tree = Tree(args.path)
     for root, dirs, files in walk(args.path, maxdepth=args.level):
         for f in files:

@@ -5,7 +5,7 @@ import zipfile
 from zipfile import ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 from .shared import glob_paths
 from . import read_file_text, print_utf8
-import sys
+from bashrange import expand_args
 
 # todo read from stdin
 # todo ouput to stdout
@@ -35,7 +35,7 @@ def main():
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('zip')
     parser.add_argument('sources', nargs='*')
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
 
     dst_base = args.output if args.output is not None else os.getcwd()
 

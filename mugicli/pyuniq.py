@@ -2,6 +2,7 @@ import argparse
 from random import uniform
 from collections import defaultdict
 from .shared import glob_paths_files, read_lines, print_lines
+from bashrange import expand_args
 
 def main():
     parser = argparse.ArgumentParser(description='prints unique or nonunique lines from sorted array of lines')
@@ -10,7 +11,7 @@ def main():
     parser.add_argument('--unique','-u',action='store_true')
     parser.add_argument('path', nargs="*")
 
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
     paths = glob_paths_files(args.path)
     lines = read_lines(paths)
 

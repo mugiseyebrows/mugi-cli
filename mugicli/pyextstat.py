@@ -3,6 +3,7 @@ import argparse
 
 from .shared import glob_paths_dirs
 from . import format_size, read_stdin_lines
+from bashrange import expand_args
 
 def main():
     parser = argparse.ArgumentParser(description='prints file extension statistics', add_help=False)
@@ -13,7 +14,7 @@ def main():
     parser.add_argument('--order', '-o', choices=['s','c','size','count'], help='sort order')
     parser.add_argument('--skip-git', action='store_true')
 
-    args = parser.parse_args()
+    args = parser.parse_args(expand_args())
 
     #print(args); exit(0)
     
