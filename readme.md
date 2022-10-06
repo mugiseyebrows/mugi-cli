@@ -120,15 +120,21 @@ optional arguments:
 ```
 ## pyfind
 ```
-usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-exec cmd args {} ;] [-delete]
+usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-exec|-aexec cmd args {} ;] [-delete]
 
-finds files and dirs that satisfy conditions (predicates)
+finds files and dirs that satisfy conditions (predicates) and executes action or prints path
 
 options:
   -maxdepth NUMBER     walk no deeper than NUMBER levels
   -output PATH         output to file instead of stdout
   -append              append to file instead of rewrite
   -abspath             print absolute paths
+  -conc NUMBER         concurrency limit for -aexec
+
+actions:
+  -delete              delete matched file
+  -exec                execute command(s)
+  -aexec               execute command(s) concurrently
 
 predicates:
   -mtime DAYS          if DAYS is negative: modified within DAYS days, 
@@ -171,7 +177,7 @@ examples:
   pyfind -iname *.py | pyxargs pywc -l
   pyfind D:\dev -iname .git -type d -cdup 1
   pyfind -iname *.dll -cdup 1 -abspath | pysetpath -o env.bat
-  pyfind -iname *.mp3 -exec ffmpeg -i {} {name}.wav ;
+  pyfind -iname *.mp3 -conc 4 -aexec ffmpeg -i {} {name}.wav ;
 
 note:
   ";" in cmd does not work as command separator so you dont have to escape it
@@ -413,7 +419,7 @@ optional arguments:
 ```
 ## pysleep
 ```
-usage: pysleep [-h] time
+usage: pysleep [-h] [-p PRINT] time [time ...]
 
 sleeps for TIME seconds
 
@@ -421,10 +427,14 @@ positional arguments:
   time
 
 optional arguments:
-  -h, --help  show this help message and exit
+  -h, --help            show this help message and exit
+  -p PRINT, --print PRINT
+                        print reminding time
 
 examples:
   pysleep 1m && taskkill 
+  pysleep 10 20
+  pysleep 60 --print 10
 
 ```
 ## pysort
