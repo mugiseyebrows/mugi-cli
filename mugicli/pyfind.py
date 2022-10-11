@@ -945,7 +945,7 @@ class AsyncContext:
             worker.cancel()
         asyncio.gather(*workers, return_exceptions=True)
 
-async def main():
+async def async_main():
 
     args = expand_args()
     if '-h' in args or '--help' in args:
@@ -999,5 +999,8 @@ def unquote(s):
         return s[1:-1]
     return s
 
+def main():
+    asyncio.run(async_main())
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
