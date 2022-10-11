@@ -7,6 +7,8 @@ import re
 
 NUM_RX = r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?)'
 
+WIN_BUILTINS = ['echo', 'dir', 'type', 'copy']
+
 def glob_paths(paths):
     res = []
     for path in paths:
@@ -153,10 +155,13 @@ def read_lines_(paths, drop_last_empty_line_ = False):
 
     return lines
 
-def run(args, cwd = None):
-    shell = (args[0] in ['type', 'echo', 'copy']) or '|' in args
-    subprocess.run(args, shell=shell, cwd=cwd)
+def adjust_command(cmd):
+    if sys.platform == 'win32' and cmd[0] in WIN_BUILTINS:
+        return ['cmd','/c'] + cmd
+    return cmd
 
+def run(cmd, cwd = None):
+    subprocess.run(adjust_command(cmd), cwd=cwd)
 
 def index_of_int(args):
     for i, arg in enumerate(args):

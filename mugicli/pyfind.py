@@ -2,7 +2,7 @@ import os
 import datetime
 import sys
 import re
-from .shared import eprint, glob_paths_dirs, has_magic, run
+from .shared import eprint, glob_paths_dirs, has_magic, run, adjust_command
 import sys
 from dataclasses import dataclass
 from itertools import count
@@ -171,15 +171,10 @@ class ActionBase:
     def flush(self):
         pass
 
-WIN_BUILTINS = ['echo', 'dir', 'type']
-
 async def executor_worker(queue):
     while True:
-        expr = await queue.get()
-        exe = expr[0]
-        if sys.platform == 'win32' and exe in WIN_BUILTINS:
-            expr = ['cmd','/c'] + expr
-        proc = await asyncio.create_subprocess_exec(*expr)
+        cmd = await queue.get()
+        proc = await asyncio.create_subprocess_exec(*adjust_command(cmd))
         await proc.wait()
         queue.task_done()
 
