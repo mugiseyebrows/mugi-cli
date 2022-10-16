@@ -156,8 +156,9 @@ def read_lines_(paths, drop_last_empty_line_ = False):
     return lines
 
 def adjust_command(cmd):
-    if sys.platform == 'win32' and cmd[0] in WIN_BUILTINS:
-        return ['cmd','/c'] + cmd
+    if sys.platform == 'win32':
+        if cmd[0] in WIN_BUILTINS or re.match("^echo.$", cmd[0]):
+            return ['cmd','/c'] + cmd
     return cmd
 
 def run(cmd, cwd = None):
