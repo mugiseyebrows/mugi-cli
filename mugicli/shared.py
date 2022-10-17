@@ -9,6 +9,17 @@ NUM_RX = r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?)'
 
 WIN_BUILTINS = ['echo', 'dir', 'type', 'copy']
 
+def split_list(vs, sep):
+    res = []
+    for v in vs:
+        if v == sep:
+            yield res
+            res = []
+        else:
+            res.append(v)
+    yield res
+    res = []
+
 def glob_paths(paths):
     res = []
     for path in paths:
@@ -163,6 +174,10 @@ def adjust_command(cmd):
 
 def run(cmd, cwd = None):
     subprocess.run(adjust_command(cmd), cwd=cwd)
+
+def run_many(cmd, cwd = None):
+    for cmd_ in split_list(cmd, '&&'):
+        run(cmd_)
 
 def index_of_int(args):
     for i, arg in enumerate(args):

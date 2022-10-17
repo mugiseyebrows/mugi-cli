@@ -2,7 +2,7 @@ import os
 import datetime
 import sys
 import re
-from .shared import eprint, glob_paths_dirs, has_magic, run, adjust_command
+from .shared import eprint, glob_paths_dirs, has_magic, run, adjust_command, split_list
 import sys
 from dataclasses import dataclass
 from itertools import count
@@ -138,16 +138,6 @@ def cdup_path(path, cdup):
             path = os.path.dirname(os.path.realpath(path))
     return path
 
-def split_list(vs, sep):
-    res = []
-    for v in vs:
-        if v == sep:
-            yield res
-            res = []
-        else:
-            res.append(v)
-    yield res
-    res = []
 
 class ActionBase:
 
