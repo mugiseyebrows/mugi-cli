@@ -101,7 +101,7 @@ def main():
         res.append((lt,wt,mt,ct,'total'))
 
     pred = [args.l, args.w, args.m, args.c, True]
-    if count_true(pred) == 1:
+    if True not in [args.l, args.w, args.m, args.c]:
         pred = [True, True, True, True, True]
 
     fmt = " ".join(['{:' + str(lw) + 'd}' if pred[0] else ''] +
@@ -113,9 +113,6 @@ def main():
     for item in res:
         cols = [v for v, en in zip(item, pred) if en]
         print(fmt.format(*cols))
-
-def count_true(items):
-    return len([v for v in items if v])
 
 if __name__ == "__main__":
     main()
