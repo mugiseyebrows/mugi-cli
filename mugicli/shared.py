@@ -205,3 +205,12 @@ def parse_args(short, long, short_val, long_val, args):
             return opts, args
         args.pop(0)
     return opts, args
+
+# set DEBUG_MUGICLI=1
+# set DEBUG_MUGICLI=0
+# DEBUG_MUGICLI=1
+# DEBUG_MUGICLI=0
+if os.environ.get('DEBUG_MUGICLI') == "1":
+    debug_print = print
+else:
+    debug_print = lambda *args, **kwargs: None
