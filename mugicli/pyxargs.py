@@ -1,7 +1,7 @@
 import sys
 import re
 import subprocess
-from .shared import eprint, run, parse_args
+from .shared import parse_args, run_many
 from . import read_stdin_text, chunks
 import textwrap
 from bashrange import expand_args
@@ -41,13 +41,13 @@ def main():
 
     if opts['L'] is not None:
         for args in chunks(args2, int(opts['L'])):
-            run(args1 + args)
+            run_many(args1 + args)
     elif opts['I'] is not None:
         for arg in args2:
             cmd = [a.replace(opts['I'], arg) for a in args1]
-            run(cmd)
+            run_many(cmd)
     else:
-        run(args1 + args2)
+        run_many(args1 + args2)
 
 if __name__ == "__main__":
     main()
