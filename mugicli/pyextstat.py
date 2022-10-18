@@ -1,7 +1,7 @@
 import os
 import argparse
 
-from .shared import glob_paths_dirs
+from .shared import glob_paths
 from . import format_size, read_stdin_lines
 from bashrange import expand_args
 
@@ -13,6 +13,7 @@ def main():
     parser.add_argument('-h', action='store_true', help='human readable sizes')
     parser.add_argument('--order', '-o', choices=['s','c','size','count'], help='sort order')
     parser.add_argument('--skip-git', action='store_true')
+    parser.add_argument('-X', '--xargs', action='store_true')
 
     args = parser.parse_args(expand_args())
 
@@ -27,23 +28,31 @@ def main():
         count = stat[ext][0]
         size = stat[ext][1]
         count += 1
-        size += os.path.getsize(os.path.join(root, f))
+        size += os.path.getsize(path)
         stat[ext] = (count, size)            
     
-    if len(args.path) == 0:
-        # read paths from stdin
-        lines = read_stdin_lines(drop_last=True, rstrip=True)
-        for line in lines:
-            append_stat(line)
+    if args.xargs:
+        paths = read_stdin_lines(drop_last=True, rstrip=True)
     else:
-        # walk paths
-        paths = glob_paths_dirs(args.path)
-        for path in paths:
+        if len(args.path) == 0:
+            paths = ['.']
+        else:
+            paths = glob_paths(args.path)
+
+    for path in paths:
+        if os.path.isfile(path):
+            append_stat(path)
+        elif os.path.isdir(path):
             for root, dirs, files in os.walk(path):
                 for f in files:
-                    append_stat(os.path.join(root, f))
+                    try:
+                        append_stat(os.path.join(root, f))
+                    except FileNotFoundError:
+                        pass
                 if args.skip_git and '.git' in dirs:
                     dirs.remove('.git')
+        else:
+            print("{} not a dir nor a file".format(path))
 
     total_count = sum([v[0] for v in stat.values()])
     total_size = sum([v[1] for v in stat.values()])
