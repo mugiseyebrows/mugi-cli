@@ -5,16 +5,27 @@ import argparse
 import hashlib
 import argparse
 import sys
-from .shared import glob_paths_files, drop_last_empty_line, index_of_int
+from .shared import glob_paths_files, drop_last_empty_line, index_of_int, stdout_codec
 import os
 import fnmatch
 from bashrange import expand_args
 
-def decode_bytes(data):
+class IsUnicode:
+    def __init__(self, value = False):
+        self.value = value
+
+    def set(self, value):
+        self.value = value
+
+def decode_bytes(data, is_unicode = None):
     try:
         text = data.decode('utf-8')
+        if is_unicode:
+            is_unicode.set(True)
     except UnicodeDecodeError:
-        text = data.decode(sys.stdin.encoding)
+        text = data.decode(stdout_codec)
+        if is_unicode:
+            is_unicode.set(False)
     return text
 
 def read_file_bin(path):
@@ -24,9 +35,9 @@ def read_file_bin(path):
 def read_stdin_bin():
     return sys.stdin.buffer.read()
 
-def read_stdin_text():
+def read_stdin_text(is_unicode = None):
     data = sys.stdin.buffer.read()
-    return decode_bytes(data)
+    return decode_bytes(data, is_unicode)
 
 def read_stdin_lines(drop_last = True, rstrip = True):
     if rstrip:
