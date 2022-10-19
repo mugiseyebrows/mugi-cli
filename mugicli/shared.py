@@ -4,6 +4,7 @@ import io
 import subprocess
 import os
 import re
+import locale
 
 NUM_RX = r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?)'
 
@@ -214,3 +215,9 @@ if os.environ.get('DEBUG_MUGICLI') == "1":
     debug_print = print
 else:
     debug_print = lambda *args, **kwargs: None
+
+loc = locale.getlocale()
+if sys.platform == 'win32' and loc == ('Russian_Russia', '1251'):
+    stdout_codec = 'cp866'
+else:
+    stdout_codec = loc[1]
