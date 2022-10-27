@@ -1,3 +1,4 @@
+from subprocess import Popen, PIPE
 import glob
 import sys
 import io
@@ -174,7 +175,16 @@ def adjust_command(cmd):
     return cmd
 
 def run(cmd, cwd = None):
-    subprocess.run(adjust_command(cmd), cwd=cwd)
+    cmds = list(split_list(cmd, "|"))
+    if len(cmds) == 1:
+        subprocess.run(adjust_command(cmd), cwd=cwd)
+    else:
+        # print(cmds)
+        processes = [Popen(adjust_command(cmd), stdin=PIPE if i > 0 else None, stdout=PIPE if i + 1 < len(cmds) else None) for i, cmd in enumerate(cmds)]
+        input = None
+        for proc in processes:
+            stdout, stderr = proc.communicate(input=input)
+            input = stdout
 
 def run_many(cmd, cwd = None):
     for cmd_ in split_list(cmd, '&&'):
