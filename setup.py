@@ -26,6 +26,7 @@ setup(
             'pyfind = mugicli.pyfind:main',
             'pygrep = mugicli.pygrep:main',
             'pyhead = mugicli.pyhead:main',
+            'pyiconv = mugicli.pyiconv:main',
             'pyls = mugicli.pyls:main',
             'pymd5sum = mugicli.pymd5sum:main',
             'pymtime = mugicli.pymtime:main',

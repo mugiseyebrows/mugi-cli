@@ -35,6 +35,9 @@ def read_file_bin(path):
 def read_stdin_bin():
     return sys.stdin.buffer.read()
 
+def write_stdout_bin(data):
+    sys.stdout.buffer.write(data)
+
 def read_stdin_text(is_unicode = None):
     data = sys.stdin.buffer.read()
     return decode_bytes(data, is_unicode)
