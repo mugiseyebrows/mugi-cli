@@ -19,7 +19,7 @@ def main():
     example_text = """examples:
   pysetpath -g conda -o conda-env.bat
   pysetpath -w gcc cmake ninja -o mingw-env.bat
-  type bindirs.txt | pysetpath --xargs -o env.bat
+  pyfind -type d -name bin -abspath | pysetpath --xargs -o env.bat
 """
 
     parser = argparse.ArgumentParser(prog='pysetpath', description='reads PATH env variable (or dirs from stdin) and prints set path expression', epilog=example_text, formatter_class=argparse.RawDescriptionHelpFormatter)
