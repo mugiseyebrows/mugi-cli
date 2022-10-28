@@ -30,7 +30,7 @@ def main():
     parser.add_argument('-X', '--xargs', action='store_true', help='read paths from stdin')
     parser.add_argument('-g', '--grep', nargs='+', help='filter paths by patterns')
     parser.add_argument('-w', '--which', nargs="+", help='add executable path')
-    parser.add_argument('-u', '--user-profile', action='store_true', help='replace %USERPROFILE% value with variable name')
+    parser.add_argument('-u', '--user-profile', action='store_true', help='replace %%USERPROFILE%% value with variable name')
     args = parser.parse_args(expand_args())
 
     #print(args); exit(0)
