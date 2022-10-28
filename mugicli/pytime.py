@@ -17,13 +17,13 @@ def print_help():
     print("""
 usage: pytime program [-h] [--help] [-s SECONDS] [--stat SECONDS] [-p PATH] [--path PATH]
 
+runs program and measures execution time, memory and cpu usage
+
 optional arguments:
   -s SECONDS, --stat SECONDS   measure cpu and memory usage, 
                                take samples with interval of SECONDS
   -p PATH, --path PATH         save cpu and memory stats in file PATH
   -o, --online                 show stat while executing program
-
-runs program and measures execution time, memory and cpu usage
 """)
 
 class ProcTree:

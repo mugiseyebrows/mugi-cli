@@ -102,6 +102,7 @@ optional arguments:
 ## pyextstat
 ```
 usage: pyextstat [-s] [--help] [-h] [--order {s,c,size,count}] [--skip-git]
+                    [-X]
                     [path ...]
 
 prints file extension statistics
@@ -116,6 +117,7 @@ optional arguments:
   --order {s,c,size,count}, -o {s,c,size,count}
                         sort order
   --skip-git
+  -X, --xargs           read paths from stdin
 
 ```
 ## pyfind
@@ -225,6 +227,21 @@ optional arguments:
   -n N        number of lines to print
 
 ```
+## pyiconv
+```
+usage: pyiconv [-h] [-f FROM] [-t TO]
+
+converts text from one encoding to another
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f FROM, --from FROM
+  -t TO, --to TO
+
+examples:
+  tasklist | pyiconv -f cp866 | pygrep python
+
+```
 ## pyls
 ```
 usage: pyls [-h] [path ...]
@@ -302,6 +319,22 @@ optional arguments:
   -h, --help  show this help message and exit
 
 ```
+## pyrepeat
+```
+
+usage: pyrepeat [-h] [--help] [--forever] [-c COUNT] [--count COUNT] [-t SECONDS] [--timeout SECONDS] program
+
+optional arguments:
+  -c, --count COUNT      run command COUNT times
+  -t, --timeout SECONDS  sleep SECONDS between 
+
+examples:
+  pyrepeat -c 100 -t 1 tasklist "|" pyiconv -f cp866 "|" pygrep python
+
+runs command(s) n times
+
+
+```
 ## pysed
 ```
 usage: pysed [-h] [-e E] expr [path ...]
@@ -336,9 +369,10 @@ seq FIRST INCREMENT LAST
 ```
 ## pysetpath
 ```
-usage: pysetpath [-h] [-o OUTPUT] [-a] [-p] [-r]
+usage: pysetpath [-h] [-o OUTPUT] [-a] [-p] [-r] [-X] [-g GREP [GREP ...]]
+                 [-w WHICH [WHICH ...]] [-u]
 
-reads dirs from stdin and prints set path expression
+reads PATH env variable (or dirs from stdin) and prints set path expression
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -347,9 +381,17 @@ optional arguments:
   -a, --append
   -p, --prepend
   -r, --reset
+  -X, --xargs           read paths from stdin
+  -g GREP [GREP ...], --grep GREP [GREP ...]
+                        filter paths by patterns
+  -w WHICH [WHICH ...], --which WHICH [WHICH ...]
+                        add executable path
+  -u, --user-profile    replace %USERPROFILE% value with variable name
 
 examples:
-  echo %PATH%| pytr ; \n | pygrep -i conda | pysetpath -o env.bat
+  pysetpath -g conda -o conda-env.bat
+  pysetpath -w gcc cmake ninja -o mingw-env.bat
+  pyfind -type d -name bin -abspath | pysetpath --xargs -o env.bat
 
 ```
 ## pysha1sum
@@ -485,9 +527,16 @@ optional arguments:
 ```
 ## pytime
 ```
-usage: pytime program [...args]
 
-measures execution time of application
+usage: pytime program [-h] [--help] [-s SECONDS] [--stat SECONDS] [-p PATH] [--path PATH]
+
+runs program and measures execution time, memory and cpu usage
+
+optional arguments:
+  -s SECONDS, --stat SECONDS   measure cpu and memory usage, 
+                               take samples with interval of SECONDS
+  -p PATH, --path PATH         save cpu and memory stats in file PATH
+  -o, --online                 show stat while executing program
 
 
 ```
@@ -596,13 +645,12 @@ optional arguments:
 ```
 ## pywc
 ```
-usage: pywc [-h] [-l] [-w] [-m] [-c] [--input INPUT] [--input-stdin]
-               [path ...]
+usage: pywc [-h] [-l] [-w] [-m] [-c] [--input INPUT] [-X] [path ...]
 
 calculates number or lines words, chars and bytes in files
 
 positional arguments:
-  path
+  path                  files
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -612,7 +660,7 @@ optional arguments:
   -c                    print the byte counts
   --input INPUT, -i INPUT
                         read file paths from file
-  --input-stdin         read file paths from stdin
+  -X, --xargs           read file paths from stdin
 
 examples:
   pywc -l text.txt

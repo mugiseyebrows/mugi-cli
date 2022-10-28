@@ -13,7 +13,7 @@ def main():
     parser.add_argument('-h', action='store_true', help='human readable sizes')
     parser.add_argument('--order', '-o', choices=['s','c','size','count'], help='sort order')
     parser.add_argument('--skip-git', action='store_true')
-    parser.add_argument('-X', '--xargs', action='store_true')
+    parser.add_argument('-X', '--xargs', action='store_true', help="read paths from stdin")
 
     args = parser.parse_args(expand_args())
 

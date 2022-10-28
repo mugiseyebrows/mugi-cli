@@ -6,7 +6,7 @@ def main():
     EXAMPLE_TEXT = """examples:
   tasklist | pyiconv -f cp866 | pygrep python
 """
-    parser = argparse.ArgumentParser(prog="pyiconv", description="convert from to encoding", epilog=EXAMPLE_TEXT, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(prog="pyiconv", description="converts text from one encoding to another", epilog=EXAMPLE_TEXT, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-f', '--from', default='utf-8')
     parser.add_argument('-t', '--to', default='utf-8')
     args = parser.parse_args(expand_args())
