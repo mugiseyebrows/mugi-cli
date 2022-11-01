@@ -306,6 +306,25 @@ optional arguments:
                         include files glob
 
 ```
+## pynmap
+```
+usage: [-h] [-p PORTS [PORTS ...]] [-t TIMEOUT] ips [ips ...]
+
+positional arguments:
+  ips                   ips to scan
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p PORTS [PORTS ...], --ports PORTS [PORTS ...]
+                        ports to scan
+  -t TIMEOUT, --timeout TIMEOUT
+                        timeout for connection
+
+examples:
+  pynmap 192.168.0.1-100 -p 80,8080
+  pynmap 192.168.0.1/24 -p 1000-2000
+
+```
 ## pyplot
 ```
 usage: pyplot [-h] [path ...]
