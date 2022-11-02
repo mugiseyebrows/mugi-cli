@@ -174,21 +174,27 @@ def adjust_command(cmd):
             return ['cmd','/c'] + cmd
     return cmd
 
-def run(cmd, cwd = None):
+def run(cmd, cwd = None, verbose=False):
     cmds = list(split_list(cmd, "|"))
     if len(cmds) == 1:
-        subprocess.run(adjust_command(cmd), cwd=cwd)
+        cmd = cmds[0]
+        if verbose:
+            eprint(" ".join(cmd))
+        cmd = adjust_command(cmd)
+        subprocess.run(cmd, cwd=cwd)
     else:
         # print(cmds)
-        processes = [Popen(adjust_command(cmd), stdin=PIPE if i > 0 else None, stdout=PIPE if i + 1 < len(cmds) else None) for i, cmd in enumerate(cmds)]
+        processes = [Popen(adjust_command(cmd), stdin=PIPE if i > 0 else None, stdout=PIPE if i + 1 < len(cmds) else None, cwd=cwd) for i, cmd in enumerate(cmds)]
         input = None
-        for proc in processes:
+        for i, proc in enumerate(processes):
+            if verbose:
+                eprint(" ".join(cmds[i]))
             stdout, stderr = proc.communicate(input=input)
             input = stdout
 
-def run_many(cmd, cwd = None):
+def run_many(cmd, cwd = None, verbose=False):
     for cmd_ in split_list(cmd, '&&'):
-        run(cmd_)
+        run(cmd_, cwd, verbose)
 
 def index_of_int(args):
     for i, arg in enumerate(args):

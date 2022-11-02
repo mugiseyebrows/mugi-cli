@@ -4,11 +4,12 @@ import time
 
 def print_help():
     print("""
-usage: pyrepeat [-h] [--help] [--forever] [-c COUNT] [--count COUNT] [-t SECONDS] [--timeout SECONDS] program
+usage: pyrepeat [-h] [--help] [--forever] [-c COUNT] [--count COUNT] [-t SECONDS] [--timeout SECONDS] [-v] [--verbose] program
 
 optional arguments:
   -c, --count COUNT      run command COUNT times
   -t, --timeout SECONDS  sleep SECONDS between 
+  -v, --verbose          print command
 
 examples:
   pyrepeat -c 100 -t 1 tasklist "|" pyiconv -f cp866 "|" pygrep python
@@ -22,6 +23,7 @@ def main():
 
     count = 0
     timeout = 0
+    verbose = False
 
     while True:
         if args[i] in ['--help', '-h']:
@@ -36,6 +38,9 @@ def main():
         elif args[i] in ['-t', '--timeout']:
             timeout = float(args[i+1])
             i += 2
+        elif args[i] in ['-v', '--verbose']:
+            verbose = True
+            i += 1
         else:
             cmd = args[i:]
             break
@@ -43,7 +48,7 @@ def main():
     iter = 0
     while True:
         iter += 1
-        run_many(cmd)
+        run_many(cmd, verbose=verbose)
         if iter != count:
             time.sleep(timeout)
         if iter == count:
