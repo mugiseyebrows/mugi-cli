@@ -39,13 +39,14 @@ async def async_main():
     EXAMPLE_TEXT = """examples:
   pynmap 192.168.0.1-100 -p 80,8080
   pynmap 192.168.0.1/24 -p 1000-2000
+  pynmap google.com -p 80
 """
 
     parser = argparse.ArgumentParser(prog="", description="", epilog=EXAMPLE_TEXT, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-p", "--ports", nargs="+", help="ports to scan")
     parser.add_argument("-t", "--timeout", type=float, default=1, help="timeout for connection")
     parser.add_argument("-v", "--verbose", action="store_true", help="show errors")
-    parser.add_argument("ips", nargs="+", help="ips to scan")
+    parser.add_argument("hosts", nargs="+", help="hosts to scan")
     args = parser.parse_args(expand_args())
     #print(args); exit(0)
 
@@ -85,24 +86,24 @@ async def async_main():
         octet_ = octet & (255 ^ (2 ** (8 - mask_) - 1))
         return [octet_ | v for v in range(2 ** (8 - mask_))]
 
-    ips = []
+    hosts = []
     
-    for arg in args.ips:
+    for arg in args.hosts:
         m = re.match("^([0-9-]+)\\.([0-9-]+)\\.([0-9-]+)\\.([0-9-]+)$", arg)
         if m:
             pattern = [to_range(m.group(i)) for i in range(1,5)]
-            ips += [to_ip(ip) for ip in product(*pattern)]
+            hosts += [to_ip(ip) for ip in product(*pattern)]
             continue
         m = re.match("^([0-9]+)\\.([0-9]+)\\.([0-9]+)\\.([0-9]+)[//]([0-9]+)$", arg)
         if m:
             mask = int(m.group(5))
             octets = [int(m.group(i)) for i in range(1,5)]
             pattern = [masked(i, octet, mask) for i, octet in enumerate(octets)]
-            ips += [to_ip(ip) for ip in product(*pattern)]
+            hosts += [to_ip(ip) for ip in product(*pattern)]
             continue
-        raise ValueError("invalid ip range {}".format(arg))
+        hosts.append(arg)
     
-    tests = [test_port(ip, port, args.timeout, args.verbose) for ip, port in product(ips, ports)]
+    tests = [test_port(host, port, args.timeout, args.verbose) for host, port in product(hosts, ports)]
 
     res = await asyncio.gather(*tests)
     for host, port, ok in res:
