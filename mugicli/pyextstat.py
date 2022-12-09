@@ -5,20 +5,60 @@ from .shared import glob_paths
 from . import format_size, read_stdin_lines
 from bashrange import expand_args
 
+class Args:
+    def __init__(self, path, short=False, human_readable=False, order='s', skip_git=False, xargs=False):
+
+        if isinstance(path, str):
+            self.path = [path]
+        else:
+            self.path = path
+            
+        self.short = short
+        self.human_readable = human_readable
+        self.order = order
+        self.skip_git = skip_git
+        self.xargs = xargs
+        self.cli = False
+
 def main():
     parser = argparse.ArgumentParser(description='prints file extension statistics', add_help=False)
     parser.add_argument("path", nargs="*", help="paths")
     parser.add_argument('-s', '--short', action='store_true', help='show short list')
     parser.add_argument('--help', action='help', help="show help")
-    parser.add_argument('-h', action='store_true', help='human readable sizes')
-    parser.add_argument('--order', '-o', choices=['s','c','size','count'], help='sort order')
+    parser.add_argument('-h', '--human-readable', action='store_true', help='human readable sizes')
+    parser.add_argument('--order', choices=['s','c','size','count'], default='s', help='sort order')
     parser.add_argument('--skip-git', action='store_true')
     parser.add_argument('-X', '--xargs', action='store_true', help="read paths from stdin")
-
+    #parser.add_argument('-o', '--output', help="output to file")
     args = parser.parse_args(expand_args())
+    args.cli = True
+    extstat(args)
 
-    #print(args); exit(0)
-    
+class Printer:
+    def __init__(self, cli):
+        self._cli = cli
+        self._items = []
+        self._other = None
+        self._total = None
+
+    def print(self, msg):
+        if self._cli:
+            print(msg)
+
+    def set_item(self, count, size, ext):
+        self._items.append((count, size, ext))
+
+    def set_other(self, count, size):
+        self._other = (count, size)
+
+    def set_total(self, count, size):
+        self._total = (count, size)
+
+    def result(self):
+        return self._items, self._other, self._total
+
+def extstat(args):
+
     stat = dict()
 
     def append_stat(path):
@@ -30,7 +70,7 @@ def main():
         count += 1
         size += os.path.getsize(path)
         stat[ext] = (count, size)            
-    
+
     if args.xargs:
         paths = read_stdin_lines(drop_last=True, rstrip=True)
     else:
@@ -67,23 +107,30 @@ def main():
 
     stat_list.sort(key = sort_key, reverse=True)
 
-    if args.h:
+    if args.human_readable:
         formatter = lambda c, s, p: "{:7d} {} {}".format(c, format_size(s, 7), p)
     else:
         formatter = lambda c, s, p: "{:7d} {:7d} {}".format(c, s, p)
 
+    p = Printer(args.cli)
     reported_size = 0
     reported_count = 0
     for ext, count, size in stat_list:
-        print(formatter(count, size, ext))
+        p.print(formatter(count, size, ext))
+        p.set_item(count, size, ext)
         reported_size += size
         reported_count += count
         if args.short and shortener(reported_count, reported_size, total_count, total_size):
-            print("...")
-            print(formatter(total_count - reported_count, total_size - reported_size, "other"))
+            p.print("...")
+            p.print(formatter(total_count - reported_count, total_size - reported_size, "other"))
+            p.set_other(total_count - reported_count, total_size - reported_size)
             break
-    print("---")
-    print(formatter(total_count, total_size, "total"))
+    p.print("---")
+    p.print(formatter(total_count, total_size, "total"))
+    p.set_total(total_count, total_size)
+
+    if not args.cli:
+        return p.result()
 
 if __name__ == "__main__":
     main()
