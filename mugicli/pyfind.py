@@ -13,6 +13,7 @@ from . import parse_size, print_utf8, walk
 from typing import Any
 from bashrange import expand_args
 import asyncio
+from functools import reduce
 
 try:
     import dateutil.parser
@@ -177,14 +178,21 @@ class ActionExec(ActionBase):
         path = cdup_path(path, self._cdup)
         nameext = os.path.basename(path)
         name = os.path.splitext(nameext)[0]
-        exprs = [
-            t.cont
-                .replace("{nameext}", nameext)
-                .replace("{name}", name) 
-                .replace("{path}", path)
-                .replace("{}", path)
-            for t in self._tokens
-        ]
+        
+        def to_list(vs):
+            if isinstance(vs, list):
+                return vs
+            return [vs]
+
+        def replace_many(s, repls):
+            return reduce(lambda acc, e: acc.replace(*e), repls, s)
+
+        exprs = []
+        for t in self._tokens:
+            for e in to_list(t.cont):
+                e = replace_many(e, [("{name}", name),("{path}", path),("{}", path)])
+                exprs.append(e)
+
         for expr in split_list(exprs, '&&'):
             if self._aexec:
                 await self._queue.put(expr)
