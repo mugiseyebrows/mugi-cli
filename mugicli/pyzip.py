@@ -6,9 +6,15 @@ from zipfile import ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 from .shared import glob_paths
 from . import read_file_text, print_utf8
 from bashrange import expand_args
+import re
 
 # todo read from stdin
 # todo ouput to stdout
+# todo concat zips and files
+# todo strip path, prepend path
+# todo include exclude
+# todo calculate hash of files
+# todo gz xz bz2
 
 def main():
 
@@ -25,12 +31,17 @@ def main():
 
     parser = argparse.ArgumentParser(description='appends, extracts and list contents of zip archive')
     parser.add_argument('command', choices=['a','x','l'], help='add extract list') # todo u - update
+    # list
+    parser.add_argument('--type', choices=['d','f'], help='list only files or only dirs')
+    parser.add_argument('--depth', type=int, help='list depth', default=0)
+
     parser.add_argument('-o', '--output', help='output directory')
     parser.add_argument('-m', choices=list(COMPRESSION_METHODS.keys()), help='compression method')
     parser.add_argument('-l', type=int, help="compression level 0..9 for deflate (0 - best speed, 9 - best compression) 1..9 for bzip2, has no effect if method is store or lzma")
     parser.add_argument('--base', help='base directory')
     parser.add_argument('--dir', help='prepend directory to path')
     parser.add_argument('--list', help='path to list of files')
+    
     parser.add_argument('-s', '--silent', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('zip')
@@ -94,8 +105,28 @@ def main():
                     
     if args.command == 'l':
         # todo print size
+
+        def get_depth(path):
+            return len(re.split("[\\\\/]", path))
+
+        dirnames = set()
+        
         with zipfile.ZipFile(args.zip) as zf:
             for name in zf.namelist():
+                if args.type == 'd':
+                    dirname = os.path.dirname(name)
+                    if args.depth == 0 or get_depth(dirname) <= args.depth:
+                        dirnames.add(dirname)
+                else:
+                    if args.depth == 0 or get_depth(name) <= args.depth:
+                        print_utf8(name)
+        
+        dirnames = list(dirnames)
+
+        dirnames.sort()
+
+        if args.type == 'd':
+            for name in dirnames:
                 print_utf8(name)
 
 if __name__ == "__main__":
