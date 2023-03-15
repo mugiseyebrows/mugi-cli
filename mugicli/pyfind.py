@@ -60,9 +60,9 @@ class Tok:
         semicolon,
         slashsemicolon,
         pathbind,
-        icont,
-        cont,
-        bcont,
+        grep,
+        igrep,
+        bgrep,
         maxdepth,
         cdup,
         first,
@@ -103,9 +103,9 @@ m = {
     "{path}": Tok.pathbind,
     "{name}": Tok.namebind,
     "{nameext}": Tok.nameextbind,
-    "-icont": Tok.icont,
-    "-cont": Tok.cont,
-    "-bcont": Tok.bcont,
+    "-grep": Tok.grep,
+    "-igrep": Tok.igrep,
+    "-bgrep": Tok.bgrep,
     "-path": Tok.path,
     "-ipath": Tok.ipath,
     "-maxdepth": Tok.maxdepth,
@@ -129,7 +129,7 @@ class T:
 tok_pred_nargs = [Tok.name, Tok.iname, Tok.path, Tok.ipath]
 
 tok_pred = [Tok.mmin, Tok.name, Tok.iname, Tok.type, Tok.newer, 
-    Tok.newerct, Tok.newermt, Tok.mtime, Tok.ctime, Tok.size, Tok.cont, Tok.icont, Tok.bcont, Tok.path, Tok.ipath]
+    Tok.newerct, Tok.newermt, Tok.mtime, Tok.ctime, Tok.size, Tok.grep, Tok.igrep, Tok.bgrep, Tok.path, Tok.ipath]
 
 def cdup_path(path, cdup):
     for i in range(cdup):
@@ -530,30 +530,40 @@ def pred_size(name, path, is_dir, arg, cache):
         return size_path < abs(size_arg)
     return size_path > size_arg
 
-def pred_xcont(name, path, is_dir, arg, cache, flags, bin):
+def pred_xgrep(name, path, is_dir, arg, cache, flags, bin):
     if is_dir:
         return None
     try:
-        with open(path, 'rb') as f:
-            data = f.read()
         if bin:
-            arg = arg.encode("utf-8").decode('unicode_escape').encode("utf-8")
+            # todo buffered read for big files
+            with open(path, 'rb') as f:
+                data = f.read()
+            arg = arg.encode("utf-8").decode('unicode_escape').encode('utf-8')
+            return arg in data
         else:
-            arg = arg.encode("utf-8")
-        return re.search(arg, data, flags) is not None
+            try:
+                with open(path, encoding='utf-8') as f:
+                    text = f.read()
+                return re.search(arg, text, flags) is not None
+            except UnicodeDecodeError as e:
+                #print("UnicodeDecodeError", e, path)
+                pass
+            except UnicodeEncodeError as e:
+                #print("UnicodeEncodeError", e)
+                pass
 
     except Exception as e:
         eprint(e)
     return None
 
-def pred_icont(name, path, is_dir, arg, cache):
-    return pred_xcont(name, path, is_dir, arg, cache, re.IGNORECASE, False)
+def pred_grep(name, path, is_dir, arg, cache):
+    return pred_xgrep(name, path, is_dir, arg, cache, 0, False)
 
-def pred_cont(name, path, is_dir, arg, cache):
-    return pred_xcont(name, path, is_dir, arg, cache, 0, False)
+def pred_igrep(name, path, is_dir, arg, cache):
+    return pred_xgrep(name, path, is_dir, arg, cache, re.IGNORECASE, False)
 
-def pred_bcont(name, path, is_dir, arg, cache):
-    return pred_xcont(name, path, is_dir, arg, cache, 0, True)
+def pred_bgrep(name, path, is_dir, arg, cache):
+    return pred_xgrep(name, path, is_dir, arg, cache, 0, True)
 
 def max_level(tree):
     level = -1
@@ -723,9 +733,9 @@ class NodePred:
             Tok.ctime: pred_ctime,
             Tok.mtime: pred_mtime,
             Tok.size: pred_size,
-            Tok.cont: pred_cont,
-            Tok.icont: pred_icont,
-            Tok.bcont: pred_bcont,
+            Tok.grep: pred_grep,
+            Tok.igrep: pred_igrep,
+            Tok.bgrep: pred_bgrep,
             Tok.path: pred_path,
             Tok.ipath: pred_ipath,
         }[type_](name, path, is_dir, arg, cache)
@@ -881,9 +891,9 @@ predicates:
   -iname PATTERN       same as -name but case insensitive
   -path PATTERN        file path matches PATTERN
   -ipath PATTERN       same as -path but case insensitive
-  -cont PATTERN        file contains PATTERN
-  -icont PATTERN       same as -cont but case insensitive
-  -bcont PATTERN       same as -cont but PATTERN is binary expression
+  -grep PATTERN        file content contains PATTERN
+  -igrep PATTERN       same as -grep but case insensitive
+  -bgrep PATTERN       same as -grep but PATTERN is binary expression
   -type d              is directory
   -type f              is file
   -cdup NUMBER         print (or perform action) parent path (strip NUMBER 
