@@ -32,6 +32,7 @@ setup(
             'pymtime = mugicli.pymtime:main',
             'pymtimestat = mugicli.pymtimestat:main',
             'pynmap = mugicli.pynmap:main',
+            'pynth = mugicli.pynth:main',
             'pyplot = mugicli.pyplot:main',
             'pyrepeat = mugicli.pyrepeat:main',
             'pysed = mugicli.pysed:main',

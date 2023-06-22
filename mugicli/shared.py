@@ -37,6 +37,20 @@ def glob_paths(paths):
 def glob_paths_files(paths):
     return _glob_paths_pred(paths, lambda path: os.path.isfile(path))
 
+def glob_paths_existing_files(paths):
+    res = []
+    for path in paths:
+        if has_magic(path):
+            for item in glob.glob(path):
+                if os.path.isfile(item):
+                    res.append(item)
+        else:
+            if not os.path.exists(path):
+                raise ValueError("path {} does not exist".format(path))
+            if os.path.isfile(path):
+                res.append(path)
+    return res
+
 def glob_paths_dirs(paths):
     return _glob_paths_pred(paths, lambda path: os.path.isdir(path))
 
