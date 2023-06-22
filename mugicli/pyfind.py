@@ -292,7 +292,7 @@ def to_int_or_zero(v):
 def last_und_index(tokens, i):
     index = None
     for i in range(i, len(tokens)):
-        if tokens[i].type == Tok.und:
+        if tokens[i].type == Tok.und and not tokens[i].cont.startswith("-"):
             index = i
         else:
             return index
@@ -369,6 +369,14 @@ def parse_args(args = None):
     pop_paths(tokens, paths, 0)
     pop_paths(tokens, paths, -1)
 
+    unrecognized = []
+    for t in tokens:
+        if t.type == Tok.und:
+            unrecognized.append(t)
+    if len(unrecognized) > 0:
+        print(tokens)
+        raise ValueError("unrecognized tokens {}".format([t.cont for t in unrecognized]))
+
     extraArgs = ExtraArgs(maxdepth=maxdepth, first=first, last=last)
 
     return tokens, paths, action, extraArgs
@@ -376,6 +384,8 @@ def parse_args(args = None):
 def pop_paths(tokens, paths, index):
     while len(tokens) > 0 and tokens[index].type == Tok.und:
         path = tokens[index].cont
+        if path.startswith("-"):
+            return
         if has_magic(path):
             paths_ = glob_paths_dirs([path])
             if len(paths_) == 0:
@@ -861,7 +871,7 @@ def expr_to_pred(expr):
     return tree, lambda name, path, is_dir: tree.eval(name, path, is_dir, cache)
 
 def print_help():
-    print("""usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-exec|-aexec cmd args {} ;] [-delete]
+    print("""usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-exec|-aexec cmd args \\{} ;] [-delete]
 
 finds files and dirs that satisfy conditions (predicates) and executes action or prints path
 
