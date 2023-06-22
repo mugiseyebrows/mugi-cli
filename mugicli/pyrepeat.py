@@ -4,17 +4,20 @@ import time
 
 def print_help():
     print("""
-usage: pyrepeat [-h] [--help] [--forever] [-c COUNT] [--count COUNT] [-t SECONDS] [--timeout SECONDS] [-v] [--verbose] program
+usage: pyrepeat [-h] [--help] [-n COUNT] [-t SECONDS] [--timeout SECONDS] [-v] [--verbose] program
 
 optional arguments:
-  -c, --count COUNT      run command COUNT times
-  -t, --timeout SECONDS  sleep SECONDS between 
+  -n COUNT               run command COUNT times
+  -t, --timeout SECONDS  sleep SECONDS between
   -v, --verbose          print command
+  --newline              print blank line after result
 
 examples:
-  pyrepeat -c 100 -t 1 tasklist "|" pyiconv -f cp866 "|" pygrep python
+  pyrepeat -n 100 -t 3 --newline tasklist "|" pyiconv -f cp866 "|" pygrep python
+  pyrepeat -n 100 -t 3 --newline tasklist "|" pyiconv -f cp866 "|" pygrep "g[+][+]|cc1plus|mingw32"
+  pyrepeat -t 30 --newline pyfind build -mmin -0.1
 
-runs command(s) n times
+runs command(s) n times or forever
 """)
 
 def main():
@@ -24,15 +27,13 @@ def main():
     count = 0
     timeout = 0
     verbose = False
+    newline = False
 
     while True:
         if args[i] in ['--help', '-h']:
             print_help()
             exit(0)
-        elif args[i] == '--forever':
-            count = 0
-            i += 1
-        elif args[i] in ['-c', '--count']:
+        elif args[i] in ['-n']:
             count = int(args[i+1])
             i += 2
         elif args[i] in ['-t', '--timeout']:
@@ -41,14 +42,33 @@ def main():
         elif args[i] in ['-v', '--verbose']:
             verbose = True
             i += 1
+        elif args[i] in ['--newline']:
+            newline = True
+            i += 1
+        elif args[i].startswith('-'):
+            raise ValueError("unrecognized argument {}".format(args[i]))
         else:
             cmd = args[i:]
+            if len(cmd) == 0:
+                raise ValueError("command is empty")
             break
     
+    def repl_iter(cmd, iter):
+        res = []
+        for e in cmd:
+            if e == 'ITER':
+                e = str(iter)
+            else:
+                e = e.replace('${ITER}', str(iter))
+            res.append(e)
+        return res
+
     iter = 0
     while True:
         iter += 1
-        run_many(cmd, verbose=verbose)
+        run_many(repl_iter(cmd, iter), verbose=verbose)
+        if newline:
+            print(flush=True)
         if iter != count:
             time.sleep(timeout)
         if iter == count:
