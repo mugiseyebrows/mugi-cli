@@ -29,7 +29,7 @@ prints file to stdout
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
   --text, -t
 
@@ -43,7 +43,7 @@ extracts and prints specific columns
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help    show this help message and exit
   -n N [N ...]  column number
 
@@ -54,7 +54,7 @@ usage: pycwd [-h]
 
 prints current working directory
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
@@ -67,23 +67,25 @@ converts line endings from dos to unix (\r\n -> \n)
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
 ## pydu
 ```
-usage: pydu [-s] [-h] [--help] [path ...]
-
-prints directories sizes
+usage: [-s] [-f] [-d] [-h] [--help] [path ...]
 
 positional arguments:
-  path    path to calculate
+  path
 
-optional arguments:
-  -s      print only summary
-  -h      print in human readible units
+options:
+  -s      print summary only
+  -f      print files stat
+  -d      print directories stat
+  -h      print in human friendly units (KB, MB, GB, TB)
   --help
+
+examples:
 
 ```
 ## pyecho
@@ -110,11 +112,11 @@ prints file extension statistics
 positional arguments:
   path                  paths
 
-optional arguments:
+options:
   -s, --short           show short list
   --help                show help
-  -h                    human readable sizes
-  --order {s,c,size,count}, -o {s,c,size,count}
+  -h, --human-readable  human readable sizes
+  --order {s,c,size,count}
                         sort order
   --skip-git
   -X, --xargs           read paths from stdin
@@ -122,7 +124,7 @@ optional arguments:
 ```
 ## pyfind
 ```
-usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-exec|-aexec cmd args {} ;] [-delete]
+usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-exec|-aexec cmd args \{} ;] [-delete]
 
 finds files and dirs that satisfy conditions (predicates) and executes action or prints path
 
@@ -132,6 +134,11 @@ options:
   -append              append to file instead of rewrite
   -abspath             print absolute paths
   -conc NUMBER         concurrency limit for -aexec
+  -trail               print trailing slash on directories
+  -cdup NUMBER         print (or perform action) parent path (strip NUMBER 
+                       trailing components from path)
+  -first NUMBER        print (or perform action) first NUMBER found items
+  -xargs               execute command once with all matched files as arguments
 
 actions:
   -delete              delete matched file
@@ -152,15 +159,11 @@ predicates:
   -iname PATTERN       same as -name but case insensitive
   -path PATTERN        file path matches PATTERN
   -ipath PATTERN       same as -path but case insensitive
-  -cont PATTERN        file contains PATTERN
-  -icont PATTERN       same as -cont but case insensitive
-  -bcont PATTERN       same as -cont but PATTERN is binary expression
+  -grep PATTERN        file content contains PATTERN
+  -igrep PATTERN       same as -grep but case insensitive
+  -bgrep PATTERN       same as -grep but PATTERN is binary expression
   -type d              is directory
   -type f              is file
-  -cdup NUMBER         print (or perform action) parent path (strip NUMBER 
-                       trailing components from path)
-  -first NUMBER        print (or perform action) first NUMBER found items
-  -last NUMBER         print (or perform action) last NUMBER found items
 
 predicates can be inverted using -not, can be grouped together in boolean expressions 
 using -or and -and and parenthesis
@@ -180,14 +183,6 @@ examples:
   pyfind D:\dev -iname .git -type d -cdup 1
   pyfind -iname *.dll -cdup 1 -abspath | pysetpath -o env.bat
   pyfind -iname *.mp3 -conc 4 -aexec ffmpeg -i {} {name}.wav ;
-
-note:
-  ";" in cmd does not work as command separator so you dont have to escape it
-  although you can if you want.
-  python treats trailing slash before quotation mark as escape sequence 
-  so in order to input root drive paths you need to not use quotation marks 
-  or double trailing slash
-  correct: "C:\\" C:\ incorrect: "C:\"
   
 
 
@@ -202,7 +197,7 @@ positional arguments:
   expr
   path
 
-optional arguments:
+options:
   -i, --ignore-case     ignore case
   -o, --only-matching
   -v, --invert-match    select non-matching lines
@@ -222,7 +217,7 @@ prints n lines from head of file
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
   -n N        number of lines to print
 
@@ -233,7 +228,7 @@ usage: pyiconv [-h] [-f FROM] [-t TO]
 
 converts text from one encoding to another
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -f FROM, --from FROM
   -t TO, --to TO
@@ -251,7 +246,7 @@ lists directory
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
@@ -264,7 +259,7 @@ prints md5 hashsum of file
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
@@ -277,7 +272,7 @@ prints mtime of file
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
@@ -292,7 +287,7 @@ prints mtime statistics
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -r RECENT, --recent RECENT
                         print recently changed files (max(mtime) - mtime <= N)
@@ -308,21 +303,36 @@ optional arguments:
 ```
 ## pynmap
 ```
-usage: [-h] [-p PORTS [PORTS ...]] [-t TIMEOUT] ips [ips ...]
+usage: [-h] [-p PORTS [PORTS ...]] [-t TIMEOUT] [-v] [-s] hosts [hosts ...]
 
 positional arguments:
-  ips                   ips to scan
+  hosts                 hosts to scan
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -p PORTS [PORTS ...], --ports PORTS [PORTS ...]
                         ports to scan
   -t TIMEOUT, --timeout TIMEOUT
                         timeout for connection
+  -v, --verbose         show errors
+  -s, --short           short output (print only open ports)
 
 examples:
   pynmap 192.168.0.1-100 -p 80,8080
   pynmap 192.168.0.1/24 -p 1000-2000
+  pynmap google.com -p 80
+
+```
+## pynth
+```
+usage: pynth [-h] [-n N] [path ...]
+
+positional arguments:
+  path
+
+options:
+  -h, --help  show this help message and exit
+  -n N
 
 ```
 ## pyplot
@@ -334,23 +344,27 @@ plots data
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
 ## pyrepeat
 ```
 
-usage: pyrepeat [-h] [--help] [--forever] [-c COUNT] [--count COUNT] [-t SECONDS] [--timeout SECONDS] program
+usage: pyrepeat [-h] [--help] [-n COUNT] [-t SECONDS] [--timeout SECONDS] [-v] [--verbose] program
 
 optional arguments:
-  -c, --count COUNT      run command COUNT times
-  -t, --timeout SECONDS  sleep SECONDS between 
+  -n COUNT               run command COUNT times
+  -t, --timeout SECONDS  sleep SECONDS between
+  -v, --verbose          print command
+  --newline              print blank line after result
 
 examples:
-  pyrepeat -c 100 -t 1 tasklist "|" pyiconv -f cp866 "|" pygrep python
+  pyrepeat -n 100 -t 3 --newline tasklist "|" pyiconv -f cp866 "|" pygrep python
+  pyrepeat -n 100 -t 3 --newline tasklist "|" pyiconv -f cp866 "|" pygrep "g[+][+]|cc1plus|mingw32"
+  pyrepeat -t 30 --newline pyfind build -mmin -0.1
 
-runs command(s) n times
+runs command(s) n times or forever
 
 
 ```
@@ -364,7 +378,7 @@ positional arguments:
   expr
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
   -e E        expression
 
@@ -393,7 +407,7 @@ usage: pysetpath [-h] [-o OUTPUT] [-a] [-p] [-r] [-X] [-g GREP [GREP ...]]
 
 reads PATH env variable (or dirs from stdin) and prints set path expression
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -o OUTPUT, --output OUTPUT
                         output path
@@ -422,7 +436,7 @@ prints sha1 hashsum of file
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
@@ -435,7 +449,7 @@ prints sha224 hashsum of file
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
@@ -448,7 +462,7 @@ prints sha256 hashsum of file
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
@@ -461,7 +475,7 @@ prints sha384 hashsum of file
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
@@ -474,7 +488,7 @@ prints sha512 hashsum of file
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
@@ -487,7 +501,7 @@ sleeps for TIME seconds
 positional arguments:
   time
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -p PRINT, --print PRINT
                         print reminding time
@@ -508,7 +522,7 @@ sorts lines
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help          show this help message and exit
   --numeric-sort, -n
   --reverse, -r
@@ -525,7 +539,7 @@ opens file in associated application or directory in explorer
 positional arguments:
   path        paths to start
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
   --show
 
@@ -539,7 +553,7 @@ prints n lines from tail of file
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
   -n N        number of lines to print
 
@@ -566,7 +580,7 @@ usage: pytmp [-h] [-p PRINT [PRINT ...]] [-i INPUT [INPUT ...]] [-o OUTPUT]
 
 temporary file helper
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -p PRINT [PRINT ...], --print PRINT [PRINT ...]
                         print filenames
@@ -591,7 +605,7 @@ changes mtime to current time or specified time
 positional arguments:
   path        target path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
   -d D        datetime or relative time in format [+-]NUM[d|h|m|s] format
 
@@ -606,7 +620,7 @@ positional arguments:
   match        chars to find
   replacement  replacement chars
 
-optional arguments:
+options:
   -h, --help   show this help message and exit
 
 examples:
@@ -623,7 +637,7 @@ usage: pytree [-h] [-L LEVEL] [-i INCLUDE [INCLUDE ...]]
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -L LEVEL, --level LEVEL
                         depth
@@ -642,7 +656,7 @@ prints unique or nonunique lines from sorted array of lines
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help      show this help message and exit
   --count, -c
   --repeated, -d
@@ -658,7 +672,7 @@ converts line endings from unix to dos (\n -> \r\n)
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
@@ -671,7 +685,7 @@ calculates number or lines words, chars and bytes in files
 positional arguments:
   path                  files
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -l                    print the newline counts
   -w                    print the word counts
@@ -709,7 +723,7 @@ prints file as hex
 positional arguments:
   path
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -s SEEK, --seek SEEK  start at offset
   -l LEN, --len LEN     number of bytes to print
@@ -717,8 +731,11 @@ optional arguments:
 ```
 ## pyzip
 ```
-usage: pyzip [-h] [-o OUTPUT] [-m {deflate,d,lzma,l,bzip2,b,store,s}]
-                [-l L] [--base BASE] [--dir DIR] [--list LIST] [-s] [-v]
+usage: pyzip [-h] [--type {d,f}] [--depth DEPTH] [--strip STRIP]
+                [--prepend PREPEND] [--include INCLUDE [INCLUDE ...]]
+                [--exclude EXCLUDE [EXCLUDE ...]] [--list LIST] [--stdin]
+                [-o OUTPUT] [-m {deflate,d,lzma,l,bzip2,b,store,s}] [-l L]
+                [--base BASE] [-s] [-v]
                 {a,x,l} zip [sources ...]
 
 appends, extracts and list contents of zip archive
@@ -728,8 +745,18 @@ positional arguments:
   zip
   sources
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
+  --type {d,f}          list only files or only dirs
+  --depth DEPTH         list depth
+  --strip STRIP         strip n path components
+  --prepend PREPEND     prepend to path
+  --include INCLUDE [INCLUDE ...], -i INCLUDE [INCLUDE ...]
+                        paths or globs to exclude
+  --exclude EXCLUDE [EXCLUDE ...], -e EXCLUDE [EXCLUDE ...]
+                        paths or globs to include
+  --list LIST           path to list of files
+  --stdin               read paths from stdin
   -o OUTPUT, --output OUTPUT
                         output directory
   -m {deflate,d,lzma,l,bzip2,b,store,s}
@@ -738,8 +765,6 @@ optional arguments:
                         - best compression) 1..9 for bzip2, has no effect if
                         method is store or lzma
   --base BASE           base directory
-  --dir DIR             prepend directory to path
-  --list LIST           path to list of files
   -s, --silent
   -v, --verbose
 
