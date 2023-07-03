@@ -72,7 +72,8 @@ class Tok:
         append,
         namebind,
         nameextbind,
-    ) = range(40)
+        trail,
+    ) = range(41)
     
 m = {
     "(": Tok.op_par,
@@ -116,6 +117,7 @@ m = {
     "-append": Tok.append,
     "-abspath": Tok.abspath,
     "-conc": Tok.conc,
+    "-trail": Tok.trail,
     "\\;": Tok.slashsemicolon
 }
 
@@ -147,14 +149,16 @@ class ActionBase:
         self._output = None
         self._abspath = None
         self._queue = None
+        self._trail = None
 
-    def setOptions(self, cdup, output, abspath, append, aexec, conc):
+    def setOptions(self, cdup, output, abspath, append, aexec, conc, trail):
         self._cdup = cdup
         self._output = output
         self._abspath = abspath
         self._append = append
         self._aexec = aexec
         self._conc = conc
+        self._trail = trail
 
     def setQueue(self, queue):
         self._queue = queue
@@ -226,6 +230,9 @@ class ActionPrint(ActionBase):
             path_ = path
         else:
             path_ = os.path.relpath(path, os.getcwd())
+
+        if self._trail and os.path.isdir(path):
+            path_ = path_ + "\\"
 
         if self._output is None:
             try:
@@ -353,6 +360,8 @@ def parse_args(args = None):
     if delete:
         action = ActionDelete()
 
+    trail = pop_named_token(tokens, Tok.trail)
+
     cdup = to_int_or_zero(pop_named_token_and_value(tokens, Tok.cdup))
 
     output = pop_named_token_and_value(tokens, Tok.output)
@@ -363,7 +372,7 @@ def parse_args(args = None):
 
     conc = to_int(pop_named_token_and_value(tokens, Tok.conc, os.cpu_count()))
     
-    action.setOptions(cdup, output, abspath, append, aexec, conc)
+    action.setOptions(cdup, output, abspath, append, aexec, conc, trail)
 
     paths = []
     pop_paths(tokens, paths, 0)
@@ -881,6 +890,7 @@ options:
   -append              append to file instead of rewrite
   -abspath             print absolute paths
   -conc NUMBER         concurrency limit for -aexec
+  -trail               print trailing slash on directories
 
 actions:
   -delete              delete matched file
