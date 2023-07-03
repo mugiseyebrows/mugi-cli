@@ -46,6 +46,7 @@ async def async_main():
     parser.add_argument("-p", "--ports", nargs="+", help="ports to scan")
     parser.add_argument("-t", "--timeout", type=float, default=1, help="timeout for connection")
     parser.add_argument("-v", "--verbose", action="store_true", help="show errors")
+    parser.add_argument("-s", "--short", action='store_true', help='short output (print only open ports)')
     parser.add_argument("hosts", nargs="+", help="hosts to scan")
     args = parser.parse_args(expand_args())
     #print(args); exit(0)
@@ -106,12 +107,17 @@ async def async_main():
     tests = [test_port(host, port, args.timeout, args.verbose) for host, port in product(hosts, ports)]
 
     res = await asyncio.gather(*tests)
-    for host, port, ok in res:
-        if ok:
-            print("{}:{}".format(host, port))
+    if args.short:
+        for host, port, ok in res:
+            if ok:
+                print("{}:{} {}".format(host, port, "open" if ok else "closed"))
+    else:
+        for host, port, ok in res:
+            print("{}:{} {}".format(host, port, "open" if ok else "closed"))
 
 def main():
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     loop.run_until_complete(async_main())
 
 if __name__ == "__main__":
