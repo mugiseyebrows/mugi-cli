@@ -2,7 +2,7 @@ import os
 import datetime
 import sys
 import re
-from .shared import eprint, glob_paths_dirs, has_magic, run, adjust_command, split_list
+from .shared import eprint, glob_paths_dirs, has_magic, run, adjust_command, split_list, debug_print
 import sys
 from dataclasses import dataclass
 from itertools import count
@@ -66,13 +66,13 @@ class Tok:
         maxdepth,
         cdup,
         first,
-        last,
         output,
         abspath,
         append,
         namebind,
         nameextbind,
         trail,
+        xargs,
     ) = range(41)
     
 m = {
@@ -112,12 +112,12 @@ m = {
     "-maxdepth": Tok.maxdepth,
     "-cdup": Tok.cdup,
     "-first": Tok.first,
-    "-last": Tok.last,
     "-output": Tok.output,
     "-append": Tok.append,
     "-abspath": Tok.abspath,
     "-conc": Tok.conc,
     "-trail": Tok.trail,
+    "-xargs": Tok.xargs,
     "\\;": Tok.slashsemicolon
 }
 
@@ -150,8 +150,9 @@ class ActionBase:
         self._abspath = None
         self._queue = None
         self._trail = None
+        self._count = 0
 
-    def setOptions(self, cdup, output, abspath, append, aexec, conc, trail):
+    def setOptions(self, cdup, output, abspath, append, aexec, conc, trail, xargs):
         self._cdup = cdup
         self._output = output
         self._abspath = abspath
@@ -159,6 +160,7 @@ class ActionBase:
         self._aexec = aexec
         self._conc = conc
         self._trail = trail
+        self._xargs = xargs
 
     def setQueue(self, queue):
         self._queue = queue
@@ -169,17 +171,27 @@ class ActionBase:
 async def executor_worker(queue):
     while True:
         cmd = await queue.get()
+        #debug_print("start", " ".join(cmd))
         proc = await asyncio.create_subprocess_exec(*adjust_command(cmd))
         await proc.wait()
+        #debug_print("complete", " ".join(cmd))
         queue.task_done()
 
 class ActionExec(ActionBase):
     def __init__(self, tokens):
         super().__init__()
         self._tokens = tokens
+        self._paths = []
 
     async def exec(self, root, name, path, is_dir):
+
         path = cdup_path(path, self._cdup)
+
+        if self._xargs:
+            self._paths.append(path)
+            self._count += 1
+            return
+
         nameext = os.path.basename(path)
         name = os.path.splitext(nameext)[0]
         
@@ -202,6 +214,26 @@ class ActionExec(ActionBase):
                 await self._queue.put(expr)
             else:
                 run(expr)
+        self._count += 1
+
+    def flush(self):
+        if not self._xargs:
+            return
+
+        def to_list(vs):
+            if isinstance(vs, list):
+                return vs
+            return [vs]
+        exprs = []
+        for t in self._tokens:
+            for e in to_list(t.cont):
+                if e == '{}':
+                    exprs += self._paths
+                else:
+                    exprs.append(e)
+        for expr in split_list(exprs, '&&'):
+            #debug_print("run", expr)
+            run(expr)
 
 class ActionDelete(ActionBase):
 
@@ -213,6 +245,7 @@ class ActionDelete(ActionBase):
         else:
             eprint("Removing file {}".format(path))
             os.remove(path)
+        self._count += 1
 
 
 class ActionPrint(ActionBase):
@@ -252,6 +285,7 @@ class ActionPrint(ActionBase):
                 f.write(path_ + "\n")
             except UnicodeEncodeError as e:
                 print(e)
+        self._count += 1
             
     def flush(self):
         f = self._f
@@ -267,7 +301,6 @@ def index_of_token(tokens, type):
 class ExtraArgs:
     maxdepth: int
     first: int
-    last: int
 
 def pop_named_token(tokens, t):
     ix = index_of_token(tokens, t)
@@ -354,8 +387,6 @@ def parse_args(args = None):
     
     first = to_int(pop_named_token_and_value(tokens, Tok.first))
 
-    last = to_int(pop_named_token_and_value(tokens, Tok.last))
-    
     delete = pop_named_token(tokens, Tok.delete)
     if delete:
         action = ActionDelete()
@@ -371,8 +402,10 @@ def parse_args(args = None):
     append = pop_named_token(tokens, Tok.append)
 
     conc = to_int(pop_named_token_and_value(tokens, Tok.conc, os.cpu_count()))
+
+    xargs = pop_named_token(tokens, Tok.xargs)
     
-    action.setOptions(cdup, output, abspath, append, aexec, conc, trail)
+    action.setOptions(cdup, output, abspath, append, aexec, conc, trail, xargs)
 
     paths = []
     pop_paths(tokens, paths, 0)
@@ -386,7 +419,7 @@ def parse_args(args = None):
         print(tokens)
         raise ValueError("unrecognized tokens {}".format([t.cont for t in unrecognized]))
 
-    extraArgs = ExtraArgs(maxdepth=maxdepth, first=first, last=last)
+    extraArgs = ExtraArgs(maxdepth=maxdepth, first=first)
 
     return tokens, paths, action, extraArgs
 
@@ -891,6 +924,10 @@ options:
   -abspath             print absolute paths
   -conc NUMBER         concurrency limit for -aexec
   -trail               print trailing slash on directories
+  -cdup NUMBER         print (or perform action) parent path (strip NUMBER 
+                       trailing components from path)
+  -first NUMBER        print (or perform action) first NUMBER found items
+  -xargs               execute command once with all matched files as arguments
 
 actions:
   -delete              delete matched file
@@ -916,10 +953,6 @@ predicates:
   -bgrep PATTERN       same as -grep but PATTERN is binary expression
   -type d              is directory
   -type f              is file
-  -cdup NUMBER         print (or perform action) parent path (strip NUMBER 
-                       trailing components from path)
-  -first NUMBER        print (or perform action) first NUMBER found items
-  -last NUMBER         print (or perform action) last NUMBER found items
 
 predicates can be inverted using -not, can be grouped together in boolean expressions 
 using -or and -and and parenthesis
@@ -939,14 +972,6 @@ examples:
   pyfind D:\\dev -iname .git -type d -cdup 1
   pyfind -iname *.dll -cdup 1 -abspath | pysetpath -o env.bat
   pyfind -iname *.mp3 -conc 4 -aexec ffmpeg -i {} {name}.wav ;
-
-note:
-  ";" in cmd does not work as command separator so you dont have to escape it
-  although you can if you want.
-  python treats trailing slash before quotation mark as escape sequence 
-  so in order to input root drive paths you need to not use quotation marks 
-  or double trailing slash
-  correct: "C:\\\\" C:\\ incorrect: "C:\\"
   
 """)
 
@@ -985,37 +1010,30 @@ async def async_main():
     if len(paths) == 0:
         paths.append(".")
 
-    collect = extraArgs.last is not None
-
-    collected = []
-
     context = AsyncContext(action._conc)
     action.setQueue(context._queue)
 
+    def need_to_stop():
+        return extraArgs.first is not None and action._count >= extraArgs.first
+
     async def walk_all():
-        stop = StopHelper(extraArgs.first)
         for path in paths:
             for root, dirs, files in walk(path, maxdepth=extraArgs.maxdepth):
                 for name in dirs:
                     p = os.path.join(root, name)
                     if pred(name, p, True):
                         await action.exec(path, name, p, True)
-                        if stop.inc():
+                        #debug_print("count {}".format(action._count))
+                        if need_to_stop():
                             return
                 for name in files:
                     p = os.path.join(root, name)
                     if pred(name, p, False):
-                        if collect:
-                            collected.append((path, name, p, False))
-                        else:
-                            await action.exec(path, name, p, False)
-                            if stop.inc():
-                                return
+                        await action.exec(path, name, p, False)
+                        #debug_print("count {}".format(action._count))
+                        if need_to_stop():
+                            return
     
-    if collect:
-        for item in collected[-extraArgs.last:]:
-            await action.exec(*item)
-
     await walk_all()
 
     await context.join()
