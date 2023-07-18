@@ -13,7 +13,7 @@ from . import parse_size, print_utf8, walk
 from typing import Any
 from bashrange import expand_args
 import asyncio
-from functools import reduce
+from functools import reduce, lru_cache
 
 try:
     import dateutil.parser
@@ -73,7 +73,8 @@ class Tok:
         nameextbind,
         trail,
         xargs,
-    ) = range(41)
+        mdate,
+    ) = range(42)
     
 m = {
     "(": Tok.op_par,
@@ -118,6 +119,7 @@ m = {
     "-conc": Tok.conc,
     "-trail": Tok.trail,
     "-xargs": Tok.xargs,
+    "-mdate": Tok.mdate,
     "\\;": Tok.slashsemicolon
 }
 
@@ -128,10 +130,10 @@ class T:
     type: int
     cont: Any
 
-tok_pred_nargs = [Tok.name, Tok.iname, Tok.path, Tok.ipath]
+tok_pred_nargs = [Tok.name, Tok.iname, Tok.path, Tok.ipath, Tok.mdate]
 
 tok_pred = [Tok.mmin, Tok.name, Tok.iname, Tok.type, Tok.newer, 
-    Tok.newerct, Tok.newermt, Tok.mtime, Tok.ctime, Tok.size, Tok.grep, Tok.igrep, Tok.bgrep, Tok.path, Tok.ipath]
+    Tok.newerct, Tok.newermt, Tok.mtime, Tok.ctime, Tok.size, Tok.grep, Tok.igrep, Tok.bgrep, Tok.path, Tok.ipath, Tok.mdate]
 
 def cdup_path(path, cdup):
     for i in range(cdup):
@@ -568,6 +570,18 @@ def pred_xtime(arg, cache, xtime):
 def pred_mtime(name, path, is_dir, arg, cache):
     return pred_xtime(arg, cache, cache.mtime(path))
 
+@lru_cache
+def path_mdate(path):
+    d = datetime.datetime.fromtimestamp(os.path.getmtime(path))
+    return datetime.datetime(d.year, d.month, d.day)
+
+def pred_mdate(name, path, is_dir, arg, cache):
+    d = path_mdate(path)
+    ds = [datetime.datetime.strptime(s, "%Y-%m-%d") for s in arg]
+    if len(ds) == 1:
+        return ds[0] <= d <= ds[0]
+    return ds[0] <= d <= ds[1]
+    
 def pred_ctime(name, path, is_dir, arg, cache):
     return pred_xtime(arg, cache, cache.ctime(path))
 
@@ -790,6 +804,7 @@ class NodePred:
             Tok.bgrep: pred_bgrep,
             Tok.path: pred_path,
             Tok.ipath: pred_ipath,
+            Tok.mdate: pred_mdate,
         }[type_](name, path, is_dir, arg, cache)
 
         if res is None:
@@ -940,6 +955,7 @@ predicates:
   -ctime DAYS          same as -mtime, but when modified metadata not content
   -mmin MINUTES        if MINUTES is negative: modified within MINUTES minutes, 
                        if positive modified more than MINUTES minutes ago
+  -mdate DATE1 [DATE2] modified at DATE1 (or between DATE1 and DATE2)
   -cmin MINUTES        same as -mmin, but when modified metadata not content
   -newer PATH/TO/FILE  modified later than PATH/TO/FILE
   -newermt DATETIME    modified later than DATETIME
