@@ -14,6 +14,8 @@ from typing import Any
 from bashrange import expand_args
 import asyncio
 from functools import reduce, lru_cache
+import time
+import tempfile
 
 try:
     import dateutil.parser
@@ -54,7 +56,6 @@ class Tok:
         ctime,
         size,
         exec,
-        aexec,
         conc,
         delete,
         semicolon,
@@ -66,14 +67,15 @@ class Tok:
         maxdepth,
         cdup,
         first,
-        output,
         abspath,
-        append,
         namebind,
         nameextbind,
         trail,
         xargs,
         mdate,
+        stat,
+        async_,
+        print,
     ) = range(42)
     
 m = {
@@ -98,7 +100,7 @@ m = {
     "-ctime": Tok.ctime,
     "-size": Tok.size,
     "-exec": Tok.exec,
-    "-aexec": Tok.aexec,
+    "-async": Tok.async_,
     "-delete": Tok.delete,
     ";": Tok.semicolon,
     "{}": Tok.pathbind,
@@ -113,13 +115,13 @@ m = {
     "-maxdepth": Tok.maxdepth,
     "-cdup": Tok.cdup,
     "-first": Tok.first,
-    "-output": Tok.output,
-    "-append": Tok.append,
     "-abspath": Tok.abspath,
     "-conc": Tok.conc,
     "-trail": Tok.trail,
     "-xargs": Tok.xargs,
     "-mdate": Tok.mdate,
+    "-stat": Tok.stat,
+    "-print": Tok.print,
     "\\;": Tok.slashsemicolon
 }
 
@@ -148,98 +150,209 @@ class ActionBase:
 
     def __init__(self):
         self._cdup = None
-        self._output = None
         self._abspath = None
         self._queue = None
-        self._trail = None
         self._count = 0
 
-    def setOptions(self, cdup, output, abspath, append, aexec, conc, trail, xargs):
+    def setOptions(self, cdup, abspath):
         self._cdup = cdup
-        self._output = output
         self._abspath = abspath
-        self._append = append
-        self._aexec = aexec
-        self._conc = conc
-        self._trail = trail
-        self._xargs = xargs
 
-    def setQueue(self, queue):
-        self._queue = queue
-
-    def flush(self):
+    async def wait(self):
         pass
 
-async def executor_worker(queue):
+# =================== <Executor>
+
+class ExecutorLogger:
+    def __init__(self):
+        self._data = []
+
+    def log(self, cmd, stdout_name, stderr_name, returncode):
+        self._data.append((cmd, stdout_name, stderr_name, returncode))
+        #print("stdout_name, stderr_name", stdout_name, stderr_name)
+
+    def flush(self):
+        stdout_fd, stdout_name = tempfile.mkstemp(prefix='pyfind-exec-complete-', suffix='.stdout')
+        stderr_fd, stderr_name = tempfile.mkstemp(prefix='pyfind-exec-complete-', suffix='.stderr')
+
+        def write(fd, cmd_, data):
+            os.write(fd, cmd_)
+            os.write(fd, data)
+            os.write(fd, b"\n")
+
+        for item in self._data:
+            cmd, input_stdout_name, input_stderr_name, returncode = item
+            cmd_ = (" ".join(cmd) + "\n").encode('utf-8')
+            with open(input_stdout_name, 'rb') as f:
+                write(stdout_fd, cmd_, f.read())
+            with open(input_stderr_name, 'rb') as f:
+                write(stderr_fd, cmd_, f.read())
+        os.close(stdout_fd)
+        os.close(stderr_fd)
+
+        eprint("stdout data saved to {}".format(stdout_name))
+        eprint("stderr data saved to {}".format(stderr_name))
+
+class Executor:
+    def exec(self, cmd):
+        pass
+    async def wait(self):
+        pass
+
+class SyncExecutor(Executor):
+    def exec(self, cmd):
+        cmd_ = adjust_command(cmd)
+        subprocess.run(cmd_)
+
+    async def wait(self):
+        pass
+
+class XargsExecutor(Executor):
+    def __init__(self, cmd):
+        super().__init__()
+        self._paths = []
+        self._cmd = cmd
+    
+    def append(self, path):
+        self._paths.append(path)
+
+    async def wait(self):
+        cmd_ = adjust_command(self._cmd + self._paths)
+        subprocess.run(cmd_)
+
+async def executor_worker(name, queue, logger: ExecutorLogger):
+    t0 = time.time()
     while True:
+        debug_print(name, "waiting for new task")
         cmd = await queue.get()
-        #debug_print("start", " ".join(cmd))
-        proc = await asyncio.create_subprocess_exec(*adjust_command(cmd))
+        t1 = time.time()
+        debug_print(name, "got task")
+        
+        stdout_fd, stdout_name = tempfile.mkstemp(prefix='pyfind-exec-', suffix='.stdout')
+        stderr_fd, stderr_name = tempfile.mkstemp(prefix='pyfind-exec-', suffix='.stderr')
+
+        cmd_ = adjust_command(cmd)
+
+        debug_print(name, "running", cmd)
+        proc = await asyncio.subprocess.create_subprocess_exec(*cmd_, stdout=stdout_fd, stderr=stderr_fd)
+        
+        debug_print(name, "wait process to complete")
         await proc.wait()
-        #debug_print("complete", " ".join(cmd))
+
+        os.close(stdout_fd)
+        os.close(stderr_fd)
+
+        logger.log(cmd, stdout_name, stderr_name, proc.returncode)
+
+        t2 = time.time()
+
+        debug_print(name, "process completed, returncode", proc.returncode, "time", (t1 - t0), (t2 - t0))
         queue.task_done()
 
+class AsyncExecutor(Executor):
+
+    def __init__(self, n = None):
+        super().__init__()
+        queue = asyncio.Queue()
+        if n is None:
+            n = os.cpu_count()
+        debug_print("create {} workers".format(n))
+        workers = []
+        logger = ExecutorLogger()
+        for i in range(n):
+            task = asyncio.create_task(executor_worker("worker {}".format(i), queue, logger))
+            workers.append(task)
+        self._queue = queue
+        self._workers = workers
+        self._n = n
+        self._logger = logger
+    
+    def exec(self, cmd):
+        self._queue.put_nowait(cmd)
+
+    async def wait(self):
+        queue = self._queue
+
+        debug_print("join queue")
+        await queue.join()
+        debug_print("queue joined")
+
+        debug_print("terminating workers")
+        workers = self._workers
+        for task in workers:
+            task.cancel()
+        asyncio.gather(*workers, return_exceptions=True)
+        debug_print("workers terminated")
+
+        self._logger.flush()
+
+
+# =================== </Executor>
+
+def exec_insert_args(tokens, path):
+    def to_list(vs):
+            if isinstance(vs, list):
+                return vs
+            return [vs]
+    
+    def replace_many(s, repls):
+        return reduce(lambda acc, e: acc.replace(*e), repls, s)
+    cmd = []
+
+    name = os.path.basename(path)
+    basename, ext = os.path.splitext(name)
+    dirname = os.path.dirname(path)
+    for t in tokens:
+        for e in to_list(t.cont):
+            e = replace_many(e, [
+                ("{dirname}", dirname), 
+                ("{basename}", basename),
+                ("{ext}", ext),
+                ("{name}", name),
+                ("{path}", path),
+                ("{}", path)
+            ])
+            cmd.append(e)
+    return cmd
+
 class ActionExec(ActionBase):
-    def __init__(self, tokens):
+    def __init__(self, tokens, async_, conc, xargs):
         super().__init__()
         self._tokens = tokens
         self._paths = []
 
-    async def exec(self, root, name, path, is_dir):
+        if xargs:
+            cmd = exec_insert_args(tokens, "xargs/arg/path")
+            executor = XargsExecutor(cmd)
+        else:
+            if async_ or conc:
+                executor = AsyncExecutor(conc)
+            else:
+                executor = SyncExecutor()
+        self._executor = executor
+
+    def exec(self, root, name, path, is_dir):
 
         path = cdup_path(path, self._cdup)
 
-        if self._xargs:
-            self._paths.append(path)
-            self._count += 1
-            return
+        if self._abspath:
+            path = os.path.realpath(path)
 
-        nameext = os.path.basename(path)
-        name = os.path.splitext(nameext)[0]
-        
-        def to_list(vs):
-            if isinstance(vs, list):
-                return vs
-            return [vs]
+        cmd = exec_insert_args(self._tokens, path)
 
-        def replace_many(s, repls):
-            return reduce(lambda acc, e: acc.replace(*e), repls, s)
+        executor = self._executor
 
-        exprs = []
-        for t in self._tokens:
-            for e in to_list(t.cont):
-                e = replace_many(e, [("{name}", name),("{path}", path),("{}", path)])
-                exprs.append(e)
+        if isinstance(executor, XargsExecutor):
+            executor.append(path)
+        else:
+            executor.exec(cmd)
 
-        for expr in split_list(exprs, '&&'):
-            if self._aexec:
-                await self._queue.put(expr)
-            else:
-                run(expr)
-        self._count += 1
-
-    def flush(self):
-        if not self._xargs:
-            return
-
-        def to_list(vs):
-            if isinstance(vs, list):
-                return vs
-            return [vs]
-        exprs = []
-        for t in self._tokens:
-            for e in to_list(t.cont):
-                if e == '{}':
-                    exprs += self._paths
-                else:
-                    exprs.append(e)
-        for expr in split_list(exprs, '&&'):
-            #debug_print("run", expr)
-            run(expr)
+    async def wait(self):
+        await self._executor.wait()
 
 class ActionDelete(ActionBase):
 
-    async def exec(self, root, name, path, is_dir):
+    def exec(self, root, name, path, is_dir):
         path = cdup_path(path, self._cdup)
         if is_dir:
             eprint("Removing directory {}".format(path))
@@ -247,16 +360,43 @@ class ActionDelete(ActionBase):
         else:
             eprint("Removing file {}".format(path))
             os.remove(path)
-        self._count += 1
 
+class Printer:
+    def __init__(self, stat, trail):
+        self._stat = stat
+        self._f = None
+        self._header = False
+        self._trail = trail
+    
+    def print(self, path):
+        path_ = path + ("\\" if self._trail and os.path.isdir(path) else "")
+        if self._stat:
+            mdate = datetime.datetime.fromtimestamp(os.path.getmtime(path))
+            size = os.path.getsize(path)
+            text = "{} {:>16} {}".format(
+                mdate.strftime("%Y-%m-%d %H:%M:%S"),
+                size,
+                path_
+            )
+        else:
+            text = path_
+
+        if self._stat and not self._header:
+            text = "{:>19} {:>16} {}\n".format("mtime","size","path") + text
+            self._header = True
+
+        try:
+            print_utf8(text)
+        except UnicodeEncodeError as e:
+            print(e)
 
 class ActionPrint(ActionBase):
 
-    def __init__(self):
+    def __init__(self, stat, trail):
         super().__init__()
-        self._f = None
+        self._printer = Printer(stat, trail)
 
-    async def exec(self, root, name, path, is_dir):
+    def exec(self, root, name, path, is_dir):
         path = cdup_path(path, self._cdup)
 
         if self._abspath:
@@ -266,33 +406,7 @@ class ActionPrint(ActionBase):
         else:
             path_ = os.path.relpath(path, os.getcwd())
 
-        if self._trail and os.path.isdir(path):
-            path_ = path_ + "\\"
-
-        if self._output is None:
-            try:
-                print_utf8(path_)
-            except UnicodeEncodeError as e:
-                print(e)
-        else:
-            f = self._f
-            if f is None:
-                if self._append:
-                    mode = "a"
-                else:
-                    mode = "w"
-                f = open(self._output, mode, encoding='utf-8')
-                self._f = f
-            try:
-                f.write(path_ + "\n")
-            except UnicodeEncodeError as e:
-                print(e)
-        self._count += 1
-            
-    def flush(self):
-        f = self._f
-        if f:
-            f.close()
+        self._printer.print(path_)
 
 def index_of_token(tokens, type):
     for i, tok in enumerate(tokens):
@@ -312,13 +426,15 @@ def pop_named_token(tokens, t):
         tokens.pop(ix)
         return True
 
-def pop_named_token_and_value(tokens, t, defval = None):
+def pop_named_token_and_value(tokens, t, defval = None, type = None):
     ix = index_of_token(tokens, t)
     if ix is None:
         return defval
     if ix is not None:
         token_key = tokens.pop(ix)
         token_value = tokens.pop(ix)
+        if type is not None:
+            return type(token_value.cont)
         return token_value.cont
 
 def to_int(v):
@@ -366,48 +482,53 @@ def parse_args(args = None):
 
     tokens = [t for t in tokens if t is not None]
 
-    action = ActionPrint()
-
     ix_exec = index_of_token(tokens, Tok.exec)
-    ix_aexec = index_of_token(tokens, Tok.aexec)
-    ix_semicolon = index_of_token(tokens, Tok.semicolon)
     ix_slashsemicolon = index_of_token(tokens, Tok.slashsemicolon)
 
-    ix_exec_ = first_truthy(ix_exec, ix_aexec)
-    aexec = ix_aexec is not None
-
-    if ix_exec_ is not None:
-        if ix_semicolon is None and ix_slashsemicolon is None:
+    exec_tokens = None
+    if ix_exec is not None:
+        if ix_slashsemicolon is None:
             raise ValueError("Invalid exec expression: semicolon not found")
-        ix_tail = first_truthy(ix_semicolon, ix_slashsemicolon)
-        exec_tokens = tokens[ix_exec_+1:ix_tail]
-        action = ActionExec(exec_tokens)
-        tokens = tokens[:ix_exec_] + tokens[ix_tail+1:]
-        #print("exec_tokens", exec_tokens)
+        ix_tail = ix_slashsemicolon
+        if ix_tail < ix_exec:
+            raise ValueError("\; preceedes -exec")
+        exec_tokens = tokens[ix_exec+1:ix_tail]
+        tokens = tokens[:ix_exec] + tokens[ix_tail+1:]
 
-    maxdepth = to_int_or_zero(pop_named_token_and_value(tokens, Tok.maxdepth))
+    print_ = pop_named_token(tokens, Tok.print)
+
+    stat = pop_named_token(tokens, Tok.stat)
+
+    trail = pop_named_token(tokens, Tok.trail)
+
+    conc = pop_named_token_and_value(tokens, Tok.conc, type=int)
+
+    async_ = pop_named_token(tokens, Tok.async_)
+
+    xargs = pop_named_token(tokens, Tok.xargs)
+
+    action = ActionPrint(stat, trail)
+
+    if exec_tokens:
+        action = ActionExec(exec_tokens, async_, conc, xargs)
     
-    first = to_int(pop_named_token_and_value(tokens, Tok.first))
+    maxdepth = pop_named_token_and_value(tokens, Tok.maxdepth, type=int)
+    if maxdepth is None:
+        maxdepth = 0
+    
+    first = pop_named_token_and_value(tokens, Tok.first, type=int)
 
     delete = pop_named_token(tokens, Tok.delete)
     if delete:
         action = ActionDelete()
 
-    trail = pop_named_token(tokens, Tok.trail)
-
-    cdup = to_int_or_zero(pop_named_token_and_value(tokens, Tok.cdup))
-
-    output = pop_named_token_and_value(tokens, Tok.output)
+    cdup = pop_named_token_and_value(tokens, Tok.cdup, type=int)
+    if cdup is None:
+        cdup = 0
 
     abspath = pop_named_token(tokens, Tok.abspath)
 
-    append = pop_named_token(tokens, Tok.append)
-
-    conc = to_int(pop_named_token_and_value(tokens, Tok.conc, os.cpu_count()))
-
-    xargs = pop_named_token(tokens, Tok.xargs)
-    
-    action.setOptions(cdup, output, abspath, append, aexec, conc, trail, xargs)
+    action.setOptions(cdup, abspath)
 
     paths = []
     pop_paths(tokens, paths, 0)
@@ -928,26 +1049,29 @@ def expr_to_pred(expr):
     return tree, lambda name, path, is_dir: tree.eval(name, path, is_dir, cache)
 
 def print_help():
-    print("""usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-exec|-aexec cmd args \\{} ;] [-delete]
+    print("""usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-async] [-exec cmd args \\{} \;] [-delete] [-print]
 
-finds files and dirs that satisfy conditions (predicates) and executes action or prints path
+finds files and dirs that satisfy conditions (predicates) and executes action
 
 options:
   -maxdepth NUMBER     walk no deeper than NUMBER levels
   -output PATH         output to file instead of stdout
   -append              append to file instead of rewrite
   -abspath             print absolute paths
-  -conc NUMBER         concurrency limit for -aexec
+  -async               execute asyncronously (do not wait for termination)
+  -conc NUMBER         concurrency limit for -async -exec, 
+                       defaults to number of cpu cores
   -trail               print trailing slash on directories
-  -cdup NUMBER         print (or perform action) parent path (strip NUMBER 
+  -cdup NUMBER         print (or perform action on) parent path (strip NUMBER 
                        trailing components from path)
-  -first NUMBER        print (or perform action) first NUMBER found items
+  -first NUMBER        print (or perform action on) of first NUMBER found items and stop
   -xargs               execute command once with all matched files as arguments
 
 actions:
   -delete              delete matched file
   -exec                execute command(s)
-  -aexec               execute command(s) concurrently
+  -print               print matched paths to output (default action)
+  -stat                print matched paths with file size and modification date
 
 predicates:
   -mtime DAYS          if DAYS is negative: modified within DAYS days, 
@@ -974,87 +1098,67 @@ predicates can be inverted using -not, can be grouped together in boolean expres
 using -or and -and and parenthesis
 
 binds:
-  {}         path to file
-  {path}     path to file
-  {nameext}  name with extension
-  {name}     name without extension
+  {}          path to file
+  {path}      path to file
+  {name}      name with extension
+  {ext}       extension
+  {basename}  name without extension
+  {dirname}   directory name
 
 examples:
   pyfind -iname *.py -mmin -10
   pyfind -iname *.cpp *.h -not ( -iname moc_* ui_* )
-  pyfind -iname *.h -exec pygrep -H class {} ;
+  pyfind -iname *.h -exec pygrep -H class {} \;
   pyfind -iname *.o -delete
-  pyfind -iname *.py | pyxargs pywc -l
+  pyfind -iname *.py -xargs -exec wc -l \;
   pyfind D:\\dev -iname .git -type d -cdup 1
   pyfind -iname *.dll -cdup 1 -abspath | pysetpath -o env.bat
-  pyfind -iname *.mp3 -conc 4 -aexec ffmpeg -i {} {name}.wav ;
-  
+  pyfind -iname *.mp3 -conc 4 -async -exec ffmpeg -i {} {dirname}\\{basename}.wav \;
+  pyfind -mdate 2023-11-05
 """)
-
-class StopHelper:
-    def __init__(self, first):
-        self.executed = 0
-        self.first = first
-    def inc(self):
-        self.executed += 1
-        return self.executed == self.first
-
-class AsyncContext:
-    def __init__(self, conc):
-        queue = asyncio.Queue()
-        loop = asyncio.get_event_loop()
-        workers = [loop.create_task(executor_worker(queue)) for _ in range(conc)]
-        self._queue = queue
-        self._workers = workers
-
-    async def join(self):
-        await self._queue.join()
-        workers = self._workers
-        for worker in workers:
-            worker.cancel()
-        asyncio.gather(*workers, return_exceptions=True)
 
 async def async_main():
 
     args = expand_args()
-    if '-h' in args or '--help' in args:
+    
+    if len(args) > 0 and args[-1] in ['-h', '--help']:
         print_help()
         return
 
     expr, paths, action, extraArgs = parse_args(args)
     tree, pred = expr_to_pred(expr)
+
     if len(paths) == 0:
         paths.append(".")
 
-    context = AsyncContext(action._conc)
-    action.setQueue(context._queue)
+    executed = 0
 
     def need_to_stop():
-        return extraArgs.first is not None and action._count >= extraArgs.first
+        nonlocal executed
+        return extraArgs.first is not None and executed >= extraArgs.first
 
-    async def walk_all():
+    def walk_all():
+        nonlocal executed
         for path in paths:
             for root, dirs, files in walk(path, maxdepth=extraArgs.maxdepth):
                 for name in dirs:
                     p = os.path.join(root, name)
                     if pred(name, p, True):
-                        await action.exec(path, name, p, True)
-                        #debug_print("count {}".format(action._count))
+                        action.exec(path, name, p, True)
+                        executed += 1
                         if need_to_stop():
                             return
                 for name in files:
                     p = os.path.join(root, name)
                     if pred(name, p, False):
-                        await action.exec(path, name, p, False)
-                        #debug_print("count {}".format(action._count))
+                        action.exec(path, name, p, False)
+                        executed += 1
                         if need_to_stop():
                             return
     
-    await walk_all()
+    walk_all()
 
-    await context.join()
-
-    action.flush()
+    await action.wait()
 
 def unquote(s):
     if s[0] == '"' and s[-1] == '"':
