@@ -1,6 +1,8 @@
+import os
 from setuptools import setup, find_packages
 
-with open('readme.md', encoding='utf-8') as f:
+readme_path = os.path.join(os.path.dirname(__file__), 'readme.md')
+with open(readme_path, encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
