@@ -124,26 +124,29 @@ options:
 ```
 ## pyfind
 ```
-usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-exec|-aexec cmd args \{} ;] [-delete]
+usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-async] [-exec cmd args \{} \;] [-delete] [-print]
 
-finds files and dirs that satisfy conditions (predicates) and executes action or prints path
+finds files and dirs that satisfy conditions (predicates) and executes action
 
 options:
   -maxdepth NUMBER     walk no deeper than NUMBER levels
   -output PATH         output to file instead of stdout
   -append              append to file instead of rewrite
   -abspath             print absolute paths
-  -conc NUMBER         concurrency limit for -aexec
+  -async               execute asyncronously (do not wait for termination)
+  -conc NUMBER         concurrency limit for -async -exec, 
+                       defaults to number of cpu cores
   -trail               print trailing slash on directories
-  -cdup NUMBER         print (or perform action) parent path (strip NUMBER 
+  -cdup NUMBER         print (or perform action on) parent path (strip NUMBER 
                        trailing components from path)
-  -first NUMBER        print (or perform action) first NUMBER found items
+  -first NUMBER        print (or perform action on) first NUMBER found items and stop
   -xargs               execute command once with all matched files as arguments
 
 actions:
   -delete              delete matched file
   -exec                execute command(s)
-  -aexec               execute command(s) concurrently
+  -print               print matched paths to output (default action)
+  -stat                print matched paths with file size and modification date
 
 predicates:
   -mtime DAYS          if DAYS is negative: modified within DAYS days, 
@@ -151,6 +154,7 @@ predicates:
   -ctime DAYS          same as -mtime, but when modified metadata not content
   -mmin MINUTES        if MINUTES is negative: modified within MINUTES minutes, 
                        if positive modified more than MINUTES minutes ago
+  -mdate DATE1 [DATE2] modified at DATE1 (or between DATE1 and DATE2)
   -cmin MINUTES        same as -mmin, but when modified metadata not content
   -newer PATH/TO/FILE  modified later than PATH/TO/FILE
   -newermt DATETIME    modified later than DATETIME
@@ -169,21 +173,23 @@ predicates can be inverted using -not, can be grouped together in boolean expres
 using -or and -and and parenthesis
 
 binds:
-  {}         path to file
-  {path}     path to file
-  {nameext}  name with extension
-  {name}     name without extension
+  {}          path to file
+  {path}      path to file
+  {name}      name with extension
+  {ext}       extension
+  {basename}  name without extension
+  {dirname}   directory name
 
 examples:
   pyfind -iname *.py -mmin -10
   pyfind -iname *.cpp *.h -not ( -iname moc_* ui_* )
-  pyfind -iname *.h -exec pygrep -H class {} ;
+  pyfind -iname *.h -exec pygrep -H class {} \;
   pyfind -iname *.o -delete
-  pyfind -iname *.py | pyxargs pywc -l
+  pyfind -iname *.py -xargs -exec wc -l \;
   pyfind D:\dev -iname .git -type d -cdup 1
   pyfind -iname *.dll -cdup 1 -abspath | pysetpath -o env.bat
-  pyfind -iname *.mp3 -conc 4 -aexec ffmpeg -i {} {name}.wav ;
-  
+  pyfind -iname *.mp3 -conc 4 -async -exec ffmpeg -i {} {dirname}\{basename}.wav \;
+  pyfind -mdate 2023-11-05
 
 
 ```
