@@ -1064,7 +1064,7 @@ options:
   -trail               print trailing slash on directories
   -cdup NUMBER         print (or perform action on) parent path (strip NUMBER 
                        trailing components from path)
-  -first NUMBER        print (or perform action on) of first NUMBER found items and stop
+  -first NUMBER        print (or perform action on) first NUMBER found items and stop
   -xargs               execute command once with all matched files as arguments
 
 actions:
