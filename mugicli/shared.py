@@ -237,6 +237,11 @@ def parse_args(short, long, short_val, long_val, args):
         args.pop(0)
     return opts, args
 
+def unquote(s):
+    if s[0] == '"' and s[-1] == '"':
+        return s[1:-1]
+    return s
+
 # set DEBUG_MUGICLI=1
 # set DEBUG_MUGICLI=0
 # DEBUG_MUGICLI=1
