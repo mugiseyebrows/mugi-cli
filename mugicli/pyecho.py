@@ -3,90 +3,91 @@ import os
 import sys
 from .shared import parse_args
 from bashrange import expand_args
-
-"""
-def parse_args(args):
-    opts = {
-        '-e': False,
-        '-n': False,
-        '-ne': False,
-        '-en': False
-    }
-    while args[0] in opts.keys():
-        opt = args.pop(0)
-        opts[opt] = True
-    if opts['-ne'] or opts['-en']:
-        opts['-n'] = True
-        opts['-e'] = True
-    return opts, args
-"""
+from dataclasses import dataclass
+from . import print_utf8
+from .shared import debug_print
 
 def print_help():
-    print("""usage: pyecho [-e] [-n] [args...]
+    print("""usage: pyecho [-e] [-n] [--stdout] [args...] [--stderr] [args...]
 
-prints text to stdout
+prints text to stdout and stderr
 
-optional arguments:
--h --help  show this message and exit
--e         decode escape sequences
--n         do not print newline
+options:
+  -h --help  show this message and exit
+  -e         decode escape sequences
+  -n         do not print newline
+  --stdout   print following args to stdout
+  --stderr   print following args to stderr
+
+examples:
+  pyecho hello world
+  pyecho -e "1\\n2\\n3"
+  pyecho -n test
+  pyecho {1..5}
+  pyecho this goes to stdout --stderr this goes to stderr
 """)
-    
+
+@dataclass
+class Opts:
+    newline: bool = False
+    help: bool = False
+    escape: bool = False
+
+def parse_opts(args):
+    opts = Opts()
+    for i, arg in enumerate(args):
+        if arg in ['-n', '--newline']:
+            opts.newline = True
+        elif arg in ['-h', '--help']:
+            opts.help = True
+        elif arg in ['-e', '--escape']:
+            opts.escape = True
+        else:
+            return opts, args[i:]
+    return opts, []
+
+def to_stdout_stderr(args):
+    stdout = []
+    stderr = []
+    dst = stdout
+    for arg in args:
+        if arg == '--stdout':
+            dst = stdout
+        elif arg == '--stderr':
+            dst = stderr
+        else:
+            dst.append(arg)
+    return stdout, stderr
+
 def main():
-    """
-    def env_vars(m):
-        n = m.group(1)
-        if n in os.environ:
-            return os.environ[n]
-        return '%' + n + '%'
-    def expand_vars(arg):
-        return re.sub("%([^%]*)%", env_vars, arg)
-    """
 
     def unescape(arg):
         return arg.encode('utf-8').decode('unicode_escape')
 
-    #print(sys.argv)
+    args = expand_args()
+    debug_print("expanded", args)
+    opts, args = parse_opts(args)
+    debug_print("opts", opts, "args", args)
+    stdout, stderr = to_stdout_stderr(args)
+    debug_print("stdout", stdout, "stderr", stderr)
 
-    opts, args = parse_args(['e','n','h'],['help'],[],[], expand_args())
-
-    if opts['h'] or opts['help']:
+    if opts.help:
         print_help()
         return
-
-    def transform(queue, res):
-
-        if len(queue) == 0:
-            return False
-
-        arg = queue.pop(0)
-
-        if opts['e']:
-            arg = unescape(arg)
-        m = re.search("\\{([0-9]+)..([0-9]+)\\}", arg)
-        if m:
-            head, tail = arg.split(m.group(0), 1)
-            start = int(m.group(1))
-            end = int(m.group(2))
-            for i in reversed(range(start, end+1)):
-                queue.insert(0, "{}{}{}".format(head, i, tail))
-        else:
-            res.append(arg)
-        
-        return True
-        
-    #args = [transform(arg) for arg in args]
     
-    queue = args
-    res = []
+    if opts.escape:
+        transform = lambda args: [unescape(arg) for arg in args]
+    else:
+        transform = lambda args: args
 
-    while(transform(queue, res)):
-        pass
-
-    text = " ".join(res)
-    sys.stdout.buffer.write(text.encode('utf-8'))
-    if not opts['n']:
-        sys.stdout.buffer.write(b'\n')
+    if len(stdout) > 0:
+        text = " ".join(transform(stdout))
+        end = b'' if opts.newline else b'\n'
+        print_utf8(text, end)
+    if len(stderr) > 0:
+        text = " ".join(transform(stderr))
+        end = b'' if opts.newline else b'\n'
+        print_utf8(text, end, file=sys.stderr)
 
 if __name__ == "__main__":
     main()

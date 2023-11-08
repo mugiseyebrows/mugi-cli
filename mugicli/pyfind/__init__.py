@@ -133,14 +133,14 @@ async def async_main():
     if len(paths) == 0:
         paths.append(".")
 
-    executed = 0
-
-    def need_to_stop():
-        nonlocal executed
-        return extraArgs.first is not None and executed >= extraArgs.first
-
     def walk_all():
-        nonlocal executed
+        executed = 0
+
+        if extraArgs.first is not None:
+            need_to_stop = lambda: executed >= extraArgs.first
+        else:
+            need_to_stop = lambda: False
+
         for path in paths:
             for root, dirs, files in walk(path, maxdepth=extraArgs.maxdepth):
                 for name in dirs:

@@ -297,7 +297,7 @@ def format_size(s, w):
         return leftpad("{:.1f}K".format(s / (1024)), w)
     return leftpad(str(s), w)
 
-def print_utf8(s, end=b'\n'):
+def print_utf8(s, end=b'\n', file=sys.stdout):
     if not isinstance(end, bytes):
         end = end.encode('utf-8')
-    sys.stdout.buffer.write(s.encode('utf-8') + end)
+    file.buffer.write(s.encode('utf-8') + end)
