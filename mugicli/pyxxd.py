@@ -13,7 +13,8 @@ def print_hex(data, seek):
         print_utf8(text)
 
 def seek_and_read(f, seek, len_):
-    f.seek(seek)
+    if seek != 0:
+        f.seek(seek)
     size = len_ if len_ > -1 else None
     data = f.read(size)
     return data
