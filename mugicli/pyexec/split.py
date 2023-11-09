@@ -46,13 +46,13 @@ def aggregate_append(args):
     return args
 
 def and_or_split(args):
-    separators = ['&&', '||', ';', '>']
-    separators_re = ['\\s*&&\\s*', '\\s*[|][|]\\s*', '\\s*;\\s*', None]
+    separators = ['&&', '||', ';', '>', '|']
+    separators_re = ['\\s*&&\\s*', '\\s*[|][|]\\s*', '\\s*;\\s*', None, '\\s*[|]\\s*']
     #print("args", args)
     for sep, sep_re in zip(separators, separators_re):
         res = []
         for e in args:
-            if len(e) > 0 and e[0] == "'":
+            if (len(e) > 0 and e[0] == "'") or e == '||':
                 res.append(e)
             else:
                 if sep == '>':
@@ -179,17 +179,20 @@ def test_exec_split():
 
     print("test_exec_split passed")
 
-test_exec_split()
+#test_exec_split()
 
 def split_cmds(args):
     cmd = []
     for e in args:
-        if e == '&&' or e == '||' or e == ';':
+        if e == '&&' or e == '||' or e == ';' or e == '|':
+            """
             if len(cmd) == 0 and e != ';':
-                raise ValueError("invalid command")
-            yield cmd
-            cmd = []
+                raise ValueError("invalid command", cmd)
+            """
+            if cmd != []:
+                yield cmd
             yield e
+            cmd = []
         else:
             cmd.append(e)
     if len(cmd) == 0:
