@@ -123,40 +123,31 @@ class LineReader:
                 size = f.seek(0, os.SEEK_END)
                 prev_pos = size
                 chunks: list[bytes] = []
-                count: list[int] = []
+                counts: list[int] = []
                 ix = 0
                 while True:
-                    ofs = (ix + 1) * BUF_SIZE
-                    if ofs > size:
-                        ofs = size
-                    pos = f.seek(-ofs, os.SEEK_END)
+                    pos_offset = (ix + 1) * BUF_SIZE
+                    if pos_offset > size:
+                        pos_offset = size
+                    pos = f.seek(-pos_offset, os.SEEK_END)
                     chunk_size = prev_pos - pos
                     chunk = f.read(chunk_size)
                     chunks.append(chunk)
-                    count.append(chunk.count(b'\n'))
+                    counts.append(chunk.count(b'\n'))
                     prev_pos = pos
                     ix += 1
-                    if sum(count) >= n:
+                    if sum(counts) >= n:
                         break
                     if pos == 0:
                         break
-                if sum(count) > (n - 1):
-                    skip = sum(count) - (n - 1)
-                else:
-                    skip = 0
-                for chunk in reversed(chunks):
-                    if skip:
-                        lines = chunk.splitlines(keepends=True)
-                        for line in lines[skip:]:
-                            fout.write(line)
-                    else:
-                        fout.write(chunk)
+                data = b''.join(reversed(chunks))
+                lines = data.splitlines(keepends=True)
+                fout.write(b''.join(lines[-n:]))
             else:
                 # todo stream implementation
                 data = f.read()
                 lines = data.splitlines(keepends=True)
-                for line in lines[-n:]:
-                    fout.write(line)
+                fout.write(b''.join(lines[-n:]))
 
 def x_main(mode):
     args = expand_args(remove_double_quotes=False, remove_quote=False)
