@@ -1,7 +1,3 @@
-from . import head_tail_main, T_TAIL
-
-def main():
-    head_tail_main(T_TAIL)
-    
+from .head import tail_main as main
 if __name__ == "__main__":
     main()

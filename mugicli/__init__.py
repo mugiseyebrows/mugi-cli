@@ -136,20 +136,9 @@ def files_hash_main(alg):
     paths = glob_paths_files(args.path)
     files_hash(paths, from_stdin, alg)
     
-(
-    T_HEAD,
-    T_TAIL
-) = range(2)
-
 def print_lines_utf8(lines):
     for line in lines:
         print_utf8(line, end='')
-
-def head_tail_print_lines(lines, n, t):
-    if t == T_HEAD:
-        print_lines_utf8(lines[:n])
-    else:
-        print_lines_utf8(lines[-n:])
 
 def bytes_to_lines(data):
     text = decode_bytes(data)
@@ -158,35 +147,6 @@ def bytes_to_lines(data):
     return lines
 
 # todo bytes, chars
-
-def head_tail_main(t):
-
-    args_ = sys.argv[1:]
-
-    while True:
-        i = index_of_int(args_)
-        #print(i)
-        if i is None:
-            break
-        args_ = args_[:i] + ['-n', str(abs(int(args_[i])))] + args_[i+1:]
-
-    description = 'prints n lines from {} of file'.format('head' if t == T_HEAD else 'tail')
-
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('-n', type=int, default=10, help='number of lines to print')
-    parser.add_argument('path', nargs="*")
-    args = parser.parse_args(args_)
-    
-    if len(args.path) == 0:
-        data = read_stdin_bin()
-        lines = bytes_to_lines(data)
-        head_tail_print_lines(lines, args.n, t)
-    else:
-        paths = glob_paths_files(args.path)
-        for path in paths:
-            data = read_file_bin(path)
-            lines = bytes_to_lines(data)
-            head_tail_print_lines(lines, args.n, t)
 
 def parse_time_arg(text):
     m = re.match('([+-]?)([0-9.e-]+)(d|h|m|s|)', text)
