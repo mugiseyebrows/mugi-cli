@@ -1,21 +1,28 @@
 from bashrange import expand_args
-from .shared import run_many
+
 import time
+import subprocess
+from .shared import run
 
 def print_help():
     print("""
-usage: pyrepeat [-h] [--help] [-n COUNT] [-t SECONDS] [--timeout SECONDS] [-v] [--verbose] program
+usage: pyrepeat [-h] [--help] [-n COUNT] [-t SECONDS] [--timeout SECONDS] 
+  [--at] [-v] [--sep-nl | --sep-sp] [--blank-line] command [args]
 
 optional arguments:
   -n COUNT               run command COUNT times
   -t, --timeout SECONDS  sleep SECONDS between
-  -v, --verbose          print command
-  --newline              print blank line after result
+  --at                   print current time and separator before executing command
+  -v, --verbose          print command and separator before executing command
+  --sep-nl               separator is newline
+  --sep-sp               separator is space (default)
+  --blank-line           print blank line after command output
 
 examples:
-  pyrepeat -n 100 -t 3 --newline tasklist "|" pyiconv -f cp866 "|" pygrep python
-  pyrepeat -n 100 -t 3 --newline tasklist "|" pyiconv -f cp866 "|" pygrep "g[+][+]|cc1plus|mingw32"
-  pyrepeat -t 30 --newline pyfind build -mmin -0.1
+  pyrepeat -n 5 echo hello world :iter:
+  pyrepeat -n 10 -t 10 --blank-line pyexec tasklist "|" pygrep python
+  pyrepeat -t 60 --at pynmap example.com -p 80
+  pyrepeat -t 30 --blank-line pyfind build -mmin -0.1
 
 runs command(s) n times or forever
 """)
@@ -27,7 +34,9 @@ def main():
     count = 0
     timeout = 0
     verbose = False
-    newline = False
+    sep_sp = True
+    blank_line = False
+    at = False
 
     while True:
         if args[i] in ['--help', '-h']:
@@ -42,8 +51,17 @@ def main():
         elif args[i] in ['-v', '--verbose']:
             verbose = True
             i += 1
-        elif args[i] in ['--newline']:
-            newline = True
+        elif args[i] in ['--blank-line']:
+            blank_line = True
+            i += 1
+        elif args[i] == '--at':
+            at = True
+            i += 1
+        elif args[i] == '--sep-sp':
+            sep_sp = True
+            i += 1
+        elif args[i] == '--sep-nl':
+            sep_sp = False
             i += 1
         elif args[i].startswith('-'):
             raise ValueError("unrecognized argument {}".format(args[i]))
@@ -56,18 +74,16 @@ def main():
     def repl_iter(cmd, iter):
         res = []
         for e in cmd:
-            if e == 'ITER':
-                e = str(iter)
-            else:
-                e = e.replace('${ITER}', str(iter))
+            e = e.replace(':iter:', str(iter))
             res.append(e)
         return res
 
     iter = 0
     while True:
         iter += 1
-        run_many(repl_iter(cmd, iter), verbose=verbose)
-        if newline:
+        end = ' ' if sep_sp else '\n'
+        run(repl_iter(cmd, iter), verbose=verbose, at=at, end=end)
+        if blank_line:
             print(flush=True)
         if iter != count:
             time.sleep(timeout)

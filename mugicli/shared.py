@@ -6,6 +6,7 @@ import subprocess
 import os
 import re
 import locale
+import datetime
 
 NUM_RX = r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?)'
 
@@ -188,27 +189,25 @@ def adjust_command(cmd):
             return ['cmd','/c'] + cmd
     return cmd
 
-def run(cmd, cwd = None, verbose=False):
-    cmds = list(split_list(cmd, "|"))
-    if len(cmds) == 1:
-        cmd = cmds[0]
-        if verbose:
-            eprint(" ".join(cmd))
-        cmd = adjust_command(cmd)
-        subprocess.run(cmd, cwd=cwd)
-    else:
-        # print(cmds)
-        processes = [Popen(adjust_command(cmd), stdin=PIPE if i > 0 else None, stdout=PIPE if i + 1 < len(cmds) else None, cwd=cwd) for i, cmd in enumerate(cmds)]
-        input = None
-        for i, proc in enumerate(processes):
-            if verbose:
-                eprint(" ".join(cmds[i]))
-            stdout, stderr = proc.communicate(input=input)
-            input = stdout
+def cmd_join(cmd):
+    res = []
+    for e in cmd:
+        if ' ' in e:
+            e = '"{}"'.format(e)
+        res.append(e)
+    return " ".join(res)
 
-def run_many(cmd, cwd = None, verbose=False):
-    for cmd_ in split_list(cmd, '&&'):
-        run(cmd_, cwd, verbose)
+def run(cmd, cwd = None, verbose=False, at=False, end = '\n'):
+    orig_cmd = cmd
+    cmd = adjust_command(cmd)
+    if at:
+        now = datetime.datetime.now()
+        print(now.strftime('%Y-%m-%d %H:%M:%S'), end=end, file=sys.stderr)
+    if verbose:
+        print(cmd_join(orig_cmd), end=end, file=sys.stderr)
+    if at or verbose:
+        print('', end='', flush=True, file=sys.stderr)
+    subprocess.run(cmd, cwd=cwd)
 
 def index_of_int(args):
     for i, arg in enumerate(args):
