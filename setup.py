@@ -39,7 +39,7 @@ setup(
             'pynth = mugicli.pynth:main',
             'pyplot = mugicli.pyplot:main',
             'pyrandom = mugicli.pyrandom:main',
-            'pyrepeat = mugicli.pyrepeat:main',
+            'pyfor = mugicli.pyfor:main',
             'pysed = mugicli.pysed:main',
             'pyseq = mugicli.pyseq:main',
             'pysetpath = mugicli.pysetpath:main',

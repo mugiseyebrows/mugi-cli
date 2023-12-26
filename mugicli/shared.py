@@ -7,10 +7,11 @@ import os
 import re
 import locale
 import datetime
+import shutil
 
 NUM_RX = r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?)'
 
-WIN_BUILTINS = ['echo', 'dir', 'type', 'copy']
+WIN_BUILTINS = ['echo', 'dir', 'type', 'copy', 'call', 'start']
 
 def split_list(vs, sep):
     res = []
@@ -182,6 +183,13 @@ def read_lines_(paths, drop_last_empty_line_ = False):
             lines += lines_
 
     return lines
+
+def is_executable(cmd0):
+    if cmd0 in WIN_BUILTINS:
+        return True
+    if '\\' in cmd0 or '/' in cmd0:
+        return os.path.exists(cmd0)
+    return shutil.which(cmd0) is not None
 
 def adjust_command(cmd):
     if sys.platform == 'win32':
