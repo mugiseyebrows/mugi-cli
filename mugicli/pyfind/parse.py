@@ -29,13 +29,12 @@ def index_of_token(tokens, type):
         if tok.type == type:
             return i
 
-def pop_named_token(tokens, t):
+def pop_named_token(tokens, t) -> bool:
     ix = index_of_token(tokens, t)
     if ix is None:
         return False
-    if ix is not None:
-        tokens.pop(ix)
-        return True
+    tokens.pop(ix)
+    return True
     
 def pop_named_token_and_value(tokens, t, defval = None, type = None):
     ix = index_of_token(tokens, t)
@@ -112,7 +111,9 @@ def parse_args(args = None):
 
     xargs = pop_named_token(tokens, TOK.xargs)
 
-    action = ActionPrint(stat, trail)
+    flush = pop_named_token(tokens, TOK.flush)
+
+    action = ActionPrint(stat, trail, flush)
 
     if exec_tokens:
         action = ActionExec(exec_tokens, async_, conc, xargs)

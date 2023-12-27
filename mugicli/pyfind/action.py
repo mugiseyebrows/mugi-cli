@@ -104,11 +104,12 @@ class ActionDelete(ActionBase):
             os.remove(path)
 
 class Printer:
-    def __init__(self, stat, trail):
+    def __init__(self, stat, trail, flush):
         self._stat = stat
         self._f = None
         self._header = False
         self._trail = trail
+        self._flush = flush
     
     def print(self, path):
         path_ = path + ("\\" if self._trail and os.path.isdir(path) else "")
@@ -127,16 +128,17 @@ class Printer:
             text = "{:>19} {:>16} {}\n".format("mtime","size","path") + text
             self._header = True
 
+        flush = self._flush
         try:
-            print_utf8(text)
+            print_utf8(text, flush=flush)
         except UnicodeEncodeError as e:
-            print(e)
+            print(e, flush=flush)
 
 class ActionPrint(ActionBase):
 
-    def __init__(self, stat, trail):
+    def __init__(self, stat, trail, flush):
         super().__init__()
-        self._printer = Printer(stat, trail)
+        self._printer = Printer(stat, trail, flush)
 
     def exec(self, root, name, path, is_dir):
         path = cdup_path(path, self._cdup)
