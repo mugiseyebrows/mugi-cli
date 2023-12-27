@@ -1,4 +1,8 @@
 import re
+import os
+
+# set DEBUG_PYEXEC=1
+DEBUG = os.environ.get('DEBUG_PYEXEC') == '1'
 
 def unquote(s):
     if len(s) > 1 and s[0] == "'" and s[-1] == "'":
@@ -79,13 +83,23 @@ def and_or_split(args):
     return args
 
 def exec_split(args):
-    # single quote split
-    #print(s)
+    if DEBUG:
+        print("args", args)
     args = single_quote_split(args)
+    if DEBUG:
+        print("single_quote_split", args)
     args = space_split(args)
+    if DEBUG:
+        print("space_split", args)
     args = and_or_split(args)
+    if DEBUG:
+        print("and_or_split", args)
+
     args = [arg for arg in args if arg != '']
+
     args = [unquote(arg) for arg in args]
+    if DEBUG:
+        print("unquote", args)
     #print(args)
     return args
 

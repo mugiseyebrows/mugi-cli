@@ -11,10 +11,11 @@ executes one or more commands conditionally
 
 options:
   -h, --help  show this help message and exit
-          
+
 examples:
   pyexec "echo 1 && echo 2 || echo 3 && echo 4; pytrue && echo 5; pyfalse && echo 6"
   pyexec "echo 'some file.txt'; pycat 'some file.txt'"
+  pyexec pytrue "&&" echo {1..3}
 
 """)
 
@@ -37,7 +38,9 @@ def main():
         print_help()
         exit(0)
     
-    args = exec_split(args)
+    if len(args) == 1:
+        args = exec_split(args)
+    
     cmds = list(split_cmds(args))
     debug_print("cmds", cmds)
 
