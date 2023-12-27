@@ -38,6 +38,7 @@ setup(
             'pynmap = mugicli.pynmap:main',
             'pynth = mugicli.pynth:main',
             'pyplot = mugicli.pyplot:main',
+            'pyprintcmd = mugicli.pyprintcmd:main',
             'pyrandom = mugicli.pyrandom:main',
             'pyfor = mugicli.pyfor:main',
             'pysed = mugicli.pysed:main',
