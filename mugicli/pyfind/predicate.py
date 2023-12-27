@@ -6,14 +6,41 @@ import re
 
 NOW = datetime.datetime.now()
 
-def _getsize(path):
-    return os.path.getsize(path)
+def _unc_path(path):
+    return '\\\\?\\' + path
 
-def _getctime(path):
-    return datetime.datetime.fromtimestamp(os.path.getctime(path))
+def _getsize(path, try_unc = True):
+    try:
+        size = os.path.getsize(path)
+        return size
+    except FileNotFoundError as e:
+        if try_unc:
+            path = _unc_path(path)
+            return _getsize(path, False)
+        else:
+            eprint(e)
 
-def _getmtime(path):
-    return datetime.datetime.fromtimestamp(os.path.getmtime(path))
+def _getctime(path, try_unc = True):
+    try:
+        ctime = os.path.getctime(path)
+        return datetime.datetime.fromtimestamp(ctime)
+    except FileNotFoundError as e:
+        if try_unc:
+            path = _unc_path(path)
+            return _getctime(path, False)
+        else:
+            eprint(e)
+
+def _getmtime(path, try_unc = True):
+    try:
+        mtime = os.path.getmtime(path)
+        return datetime.datetime.fromtimestamp(mtime)
+    except FileNotFoundError as e:
+        if try_unc:
+            path = _unc_path(path)
+            return _getmtime(path, False)
+        else:
+            eprint(e)
 
 # =================== <Predicates>
 
@@ -87,7 +114,7 @@ def mtime(name, path, is_dir, arg, val):
     return _xtime(arg, val, _getmtime(path))
 
 def _getmdate(path):
-    d = datetime.datetime.fromtimestamp(os.path.getmtime(path))
+    d = _getmtime(path)
     return datetime.datetime(d.year, d.month, d.day)
 
 def mdate(name, path, is_dir, arg, val):
@@ -110,21 +137,32 @@ def size(name, path, is_dir, arg, val):
         return size_path < abs(size_arg)
     return size_path > size_arg
 
-def _xgrep(name, path, is_dir, arg, flags, bin):
+def _xgrep(name, path, is_dir, arg, flags, bin, try_unc = True):
     if is_dir:
         return None
     try:
         if bin:
             # todo buffered read for big files
-            with open(path, 'rb') as f:
-                data = f.read()
-            arg = arg.encode("utf-8").decode('unicode_escape').encode('utf-8')
-            return arg in data
+            try:
+                with open(path, 'rb') as f:
+                    data = f.read()
+                arg = arg.encode("utf-8").decode('unicode_escape').encode('utf-8')
+                return arg in data
+            except FileNotFoundError as e:
+                if try_unc:
+                    return _xgrep(name, path, is_dir, arg, flags, bin, False)
+                else:
+                    eprint(e)
         else:
             try:
                 with open(path, encoding='utf-8') as f:
                     text = f.read()
                 return re.search(arg, text, flags) is not None
+            except FileNotFoundError as e:
+                if try_unc:
+                    return _xgrep(name, path, is_dir, arg, flags, bin, False)
+                else:
+                    eprint(e)
             except UnicodeDecodeError as e:
                 #print("UnicodeDecodeError", e, path)
                 pass
