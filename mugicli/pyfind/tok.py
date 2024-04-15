@@ -46,7 +46,8 @@ class TOK:
         async_,
         print,
         flush,
-    ) = range(43)
+        touch
+    ) = range(44)
     
 TOK_AS_INT = {
     "(": TOK.op_par,
@@ -92,6 +93,7 @@ TOK_AS_INT = {
     "-mdate": TOK.mdate,
     "-stat": TOK.stat,
     "-print": TOK.print,
+    "-touch": TOK.touch,
     "-flush": TOK.flush,
     "\\;": TOK.slashsemicolon
 }

@@ -5,6 +5,7 @@ from .executor import AsyncExecutor, SyncExecutor, XargsExecutor
 from ..shared import eprint
 import shutil
 import datetime
+from pathlib import Path
 
 def cdup_path(path, cdup):
     for i in range(cdup):
@@ -92,6 +93,15 @@ class ActionExec(ActionBase):
     async def wait(self):
         await self._executor.wait()
 
+def _unc_path(path):
+    return '\\\\?\\' + path
+
+def _remove(path):
+    try:
+        os.remove(path)
+    except FileNotFoundError:
+        os.remove(_unc_path(path))
+
 class ActionDelete(ActionBase):
 
     def exec(self, root, name, path, is_dir):
@@ -101,7 +111,12 @@ class ActionDelete(ActionBase):
             shutil.rmtree(path)
         else:
             eprint("Removing file {}".format(path))
-            os.remove(path)
+            _remove(path)
+
+class ActionTouch(ActionBase):
+    def exec(self, root, name, path, is_dir):
+        path = cdup_path(path, self._cdup)
+        Path(path).touch()
 
 class Printer:
     def __init__(self, stat, trail, flush):

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from .tok import T, TOK, TOK_AS_INT, tok_pred, tok_pred_nargs
 from . import predicate
-from .action import ActionPrint, ActionExec, ActionDelete
+from .action import ActionPrint, ActionExec, ActionDelete, ActionTouch
 from ..shared import has_magic, glob_paths_dirs
 from .. import parse_size
 import dateutil.parser
@@ -127,6 +127,10 @@ def parse_args(args = None):
     delete = pop_named_token(tokens, TOK.delete)
     if delete:
         action = ActionDelete()
+
+    touch = pop_named_token(tokens, TOK.touch)
+    if touch:
+        action = ActionTouch()
 
     cdup = pop_named_token_and_value(tokens, TOK.cdup, type=int)
     if cdup is None:
