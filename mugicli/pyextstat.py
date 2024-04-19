@@ -4,6 +4,8 @@ import argparse
 from .shared import glob_paths
 from . import format_size, read_stdin_lines
 from bashrange import expand_args
+from shortwalk import walk
+from collections import defaultdict
 
 class Args:
     def __init__(self, path, short=False, human_readable=False, order='s', skip_git=False, xargs=False):
@@ -26,10 +28,11 @@ def main():
     parser.add_argument('-s', '--short', action='store_true', help='show short list')
     parser.add_argument('--help', action='help', help="show help")
     parser.add_argument('-h', '--human-readable', action='store_true', help='human readable sizes')
-    parser.add_argument('--order', choices=['s','c','size','count'], default='s', help='sort order')
+    parser.add_argument("-o",'--order', choices=['s','c','size','count'], default='s', help='sort order')
     parser.add_argument('--skip-git', action='store_true')
     parser.add_argument('-X', '--xargs', action='store_true', help="read paths from stdin")
-    #parser.add_argument('-o', '--output', help="output to file")
+    parser.add_argument('--maxdepth', type=int, default=0)
+    parser.add_argument('--sample', type=int, default=0)
     args = parser.parse_args(expand_args())
     args.cli = True
     extstat(args)
@@ -59,17 +62,19 @@ class Printer:
 
 def extstat(args):
 
-    stat = dict()
+    stat = defaultdict(lambda: (0, 0))
+    sample = defaultdict(list)
 
     def append_stat(path):
         ext = os.path.splitext(path)[1]
-        if ext not in stat:
-            stat[ext] = (0, 0)
-        count = stat[ext][0]
-        size = stat[ext][1]
+        if len(ext) > 14:
+            ext = ''
+        count, size = stat[ext]
         count += 1
         size += os.path.getsize(path)
-        stat[ext] = (count, size)            
+        stat[ext] = (count, size)
+        if len(sample[ext]) < args.sample:
+            sample[ext].append(os.path.basename(path))
 
     if args.xargs:
         paths = read_stdin_lines(drop_last=True, rstrip=True)
@@ -83,7 +88,7 @@ def extstat(args):
         if os.path.isfile(path):
             append_stat(path)
         elif os.path.isdir(path):
-            for root, dirs, files in os.walk(path):
+            for root, dirs, files in walk(path, maxdepth=args.maxdepth):
                 for f in files:
                     try:
                         append_stat(os.path.join(root, f))
@@ -107,26 +112,44 @@ def extstat(args):
 
     stat_list.sort(key = sort_key, reverse=True)
 
+    def sample_str(items):
+        def q(s):
+            if ' ' in s:
+                return '"' + s + '"'
+            return s
+        return " ".join([q(e) for e in items])
+
     if args.human_readable:
-        formatter = lambda c, s, p: "{:7d} {} {}".format(c, format_size(s, 7), p)
+        formatter = lambda c, s, p, smp: "{:7d} {} {:14s} {}".format(c, format_size(s, 7), p, sample_str(smp))
     else:
-        formatter = lambda c, s, p: "{:7d} {:7d} {}".format(c, s, p)
+        formatter = lambda c, s, p, smp: "{:7d} {:12d} {:14s} {}".format(c, s, p, sample_str(smp))
 
     p = Printer(args.cli)
     reported_size = 0
     reported_count = 0
+
+    if args.human_readable:
+        header_format = "{:7s} {:7s} {:14s} {}"
+    else:
+        header_format = "{:7s} {:12s} {:14s} {}"
+    header_cols = ["Count", "Size", "Ext"]
+    if args.sample > 0:
+        header_cols.append("Sample")
+    else:
+        header_cols.append("")
+    print(header_format.format(*header_cols))
     for ext, count, size in stat_list:
-        p.print(formatter(count, size, ext))
+        p.print(formatter(count, size, ext, sample[ext]))
         p.set_item(count, size, ext)
         reported_size += size
         reported_count += count
         if args.short and shortener(reported_count, reported_size, total_count, total_size):
             p.print("...")
-            p.print(formatter(total_count - reported_count, total_size - reported_size, "other"))
+            p.print(formatter(total_count - reported_count, total_size - reported_size, "other", []))
             p.set_other(total_count - reported_count, total_size - reported_size)
             break
     p.print("---")
-    p.print(formatter(total_count, total_size, "total"))
+    p.print(formatter(total_count, total_size, "total", []))
     p.set_total(total_count, total_size)
 
     if not args.cli:

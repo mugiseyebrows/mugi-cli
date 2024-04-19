@@ -1,8 +1,9 @@
 import argparse
 import os
 import re
-from . import print_utf8, walk, include_exclude
+from . import print_utf8, include_exclude
 from bashrange import expand_args
+from shortwalk import walk
 
 def split_path(path):
     parts = re.split('[/\\\\]', path)

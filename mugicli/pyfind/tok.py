@@ -28,7 +28,6 @@ class TOK:
         conc,
         delete,
         semicolon,
-        slashsemicolon,
         pathbind,
         grep,
         igrep,
@@ -46,9 +45,16 @@ class TOK:
         async_,
         print,
         flush,
-        touch
+        touch,
+        cpptmp,
     ) = range(44)
     
+def tok_type_as_string(type):
+    for k, v in TOK.__dict__.items():
+        if isinstance(v, int):
+            if v == type:
+                return k
+
 TOK_AS_INT = {
     "(": TOK.op_par,
     ")": TOK.cl_par,
@@ -74,6 +80,7 @@ TOK_AS_INT = {
     "-async": TOK.async_,
     "-delete": TOK.delete,
     ";": TOK.semicolon,
+    "\\;": TOK.semicolon,
     "{}": TOK.pathbind,
     "{path}": TOK.pathbind,
     "{name}": TOK.namebind,
@@ -95,7 +102,7 @@ TOK_AS_INT = {
     "-print": TOK.print,
     "-touch": TOK.touch,
     "-flush": TOK.flush,
-    "\\;": TOK.slashsemicolon
+    "-cpptmp": TOK.cpptmp
 }
 
 TOK_AS_STR = {v:k for k,v in TOK_AS_INT.items()}
@@ -106,8 +113,8 @@ class T:
     cont: Any
     val: Any = None
 
-tok_pred_nargs = [TOK.name, TOK.iname, TOK.path, TOK.ipath, TOK.mdate]
+tok_pred_nargs = [TOK.name, TOK.iname, TOK.path, TOK.ipath, TOK.mdate, TOK.cpptmp]
 
 tok_pred = [TOK.mmin, TOK.name, TOK.iname, TOK.type, TOK.newer, 
     TOK.newerct, TOK.newermt, TOK.mtime, TOK.ctime, TOK.size, TOK.grep, 
-    TOK.igrep, TOK.bgrep, TOK.path, TOK.ipath, TOK.mdate]
+    TOK.igrep, TOK.bgrep, TOK.path, TOK.ipath, TOK.mdate, TOK.cpptmp]

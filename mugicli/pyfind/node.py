@@ -1,5 +1,5 @@
 from . import predicate
-from .tok import T, TOK, TOK_AS_STR, tok_pred
+from .tok import T, TOK, TOK_AS_STR, tok_pred, tok_pred_nargs, tok_type_as_string
 
 class NodeOpPar:
     def __repr__(self) -> str:
@@ -21,10 +21,21 @@ class NodeOr:
     def __repr__(self) -> str:
         return 'Or'
 
+NODE_CONSTRUCTORS = {
+    TOK.op_par: NodeOpPar,
+    TOK.cl_par: NodeClPar,
+    TOK.and_: NodeAnd,
+    TOK.or_: NodeOr,
+    TOK.not_: NodeNot,
+}
+
 class NodePred:
 
     def __init__(self, tokens):
         self._tokens = tokens
+        type, arg, val = self._type_arg_val()
+        #print(self)
+        #print("type", type, "arg", arg, "val", val)
 
     def __repr__(self) -> str:
         type_, arg, val = self._type_arg_val()
@@ -36,13 +47,27 @@ class NodePred:
 
     def _type_arg_val(self):
         tokens = self._tokens
-        return tokens[-2].type, tokens[-1].cont, tokens[-1].val
+
+        if tokens[0].type == TOK.not_:
+            type = tokens[1].type
+            nargs = len(tokens) - 2
+        else:
+            nargs = len(tokens) - 1
+            type = tokens[0].type
+
+        if type in tok_pred_nargs or type == TOK.mdate:
+            val = [e.val for e in tokens[-nargs:]]
+            arg = [e.cont for e in tokens[-nargs:]]
+        else:
+            val = tokens[-1].val
+            arg = tokens[-1].cont
+        return type, arg, val
 
     def eval(self, name, path, is_dir):
 
         exp = False if self._tokens[0].type == TOK.not_ else True
         type_, arg, val = self._type_arg_val()
-        
+
         if arg is None:
             return None
 
@@ -63,6 +88,7 @@ class NodePred:
             TOK.path: predicate.path,
             TOK.ipath: predicate.ipath,
             TOK.mdate: predicate.mdate,
+            TOK.cpptmp: predicate.cpptmp
         }[type_](name, path, is_dir, arg, val)
 
         if res is None:
@@ -209,8 +235,6 @@ def find_level(tree, level):
 
 def expr_to_pred(expr):
 
-    level = 0
-    
     while True:
         i = pred_token_index(expr)
         if i > -1:
@@ -218,25 +242,31 @@ def expr_to_pred(expr):
                 head = i-1
             else:
                 head = i
-            expr = expr[:head] + [NodePred(expr[head: i+2])] + expr[i+2:]
-            t = 1
-            #print(expr)
+            
+            if expr[i].type in tok_pred_nargs:
+                nargs = 0
+                for j in range(i+1, len(expr)):
+                    if expr[j].type == TOK.arg:
+                        nargs += 1
+                    else:
+                        break
+            else:
+                nargs = 1
+            expr = expr[:head] + [NodePred(expr[head: i+nargs+1])] + expr[i+nargs+1:]
         else:
             break
 
     for i, tok in enumerate(expr):
         if isinstance(tok, T):
-            expr[i] = {
-                TOK.op_par: NodeOpPar,
-                TOK.cl_par: NodeClPar,
-                TOK.and_: NodeAnd,
-                TOK.or_: NodeOr,
-                TOK.not_: NodeNot,
-            }[tok.type]()
+            if tok.type not in NODE_CONSTRUCTORS:
+                raise ValueError("unexpected token type {}".format(tok_type_as_string(tok.type)))
+            expr[i] = NODE_CONSTRUCTORS[tok.type]()
 
     expr = [e for e in expr if not isinstance(e, NodeAnd)]
 
     tree = []
+
+    level = 0
 
     for i, tok in enumerate(expr):
         

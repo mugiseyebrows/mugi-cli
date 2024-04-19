@@ -1,6 +1,5 @@
 import os
-from .. import walk
-from typing import Any
+from shortwalk import walk
 from bashrange import expand_args
 import asyncio
 from .parse import parse_args
@@ -64,6 +63,7 @@ actions:
   -exec                execute command(s)
   -print               print matched paths to output (default action)
   -stat                print matched paths with file size and modification date
+  -touch               touch file (set mtime to current time)
 
 predicates:
   -mtime DAYS          if DAYS is negative: modified within DAYS days, 
@@ -85,6 +85,7 @@ predicates:
   -bgrep PATTERN       same as -grep but PATTERN is binary expression
   -type d              is directory
   -type f              is file
+  -cpptmp              temporary cpp files (build artifacts - objects and generated code)
 
 predicates can be inverted using -not, can be grouped together in boolean expressions 
 using -or and -and and parenthesis

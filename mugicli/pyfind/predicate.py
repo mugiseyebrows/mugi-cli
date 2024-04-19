@@ -115,7 +115,7 @@ def mtime(name, path, is_dir, arg, val):
 
 def _getmdate(path):
     d = _getmtime(path)
-    return datetime.datetime(d.year, d.month, d.day)
+    return datetime.date(d.year, d.month, d.day)
 
 def mdate(name, path, is_dir, arg, val):
     d = _getmdate(path)
@@ -182,3 +182,16 @@ def igrep(name, path, is_dir, arg, val):
 
 def bgrep(name, path, is_dir, arg, val):
     return _xgrep(name, path, is_dir, arg, 0, True)
+
+def cpptmp(name, path, is_dir, arg, val):
+    if is_dir:
+        return False
+    if os.path.splitext(name)[1].lower() in ['.o', '.obj']:
+        return True
+    if re.match('^ui_.*[.]h$', name):
+        return True
+    if re.match('^(qrc|moc)_.*[.]cpp$', name):
+        return True
+    if name.split(".")[0] in ['object_script', 'Makefile']:
+        return True
+    return False

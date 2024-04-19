@@ -74,11 +74,15 @@ def parse_args(args = None):
             continue
 
         if tok.type in tok_pred_nargs:
-            index = last_und_index(tokens, i+1)
-            cont = [t.cont for t in tokens[i+1:index+1]]
-            tokens[index] = T(TOK.arg, cont=cont)
-            for j in range(i+1, index):
-                tokens[j] = None
+            #index = last_und_index(tokens, i+1)
+            #cont = [t.cont for t in tokens[i+1:index+1]]
+            #tokens[index] = T(TOK.arg, cont=cont)
+            #for j in range(i+1, index):
+            #    tokens[j] = None
+            for j in range(i+1, len(tokens)):
+                if tokens[j].cont.startswith('-'):
+                    break
+                tokens[j] = T(TOK.arg, tokens[j].cont)
 
         elif tok.type in tok_pred:
             token = tokens[i+1]
@@ -87,13 +91,13 @@ def parse_args(args = None):
     tokens = [t for t in tokens if t is not None]
 
     ix_exec = index_of_token(tokens, TOK.exec)
-    ix_slashsemicolon = index_of_token(tokens, TOK.slashsemicolon)
+    ix_semicolon = index_of_token(tokens, TOK.semicolon)
 
     exec_tokens = None
     if ix_exec is not None:
-        if ix_slashsemicolon is None:
+        if ix_semicolon is None:
             raise ValueError("Invalid exec expression: semicolon not found")
-        ix_tail = ix_slashsemicolon
+        ix_tail = ix_semicolon
         if ix_tail < ix_exec:
             raise ValueError("\; preceedes -exec")
         exec_tokens = tokens[ix_exec+1:ix_tail]
@@ -169,8 +173,12 @@ def parse_args(args = None):
             arg = tokens[i+1].cont
             tokens[i+1].val = float(arg)
         elif tok.type == TOK.mdate:
-            arg = tokens[i+1].cont
-            tokens[i+1].val = [datetime.datetime.strptime(s, "%Y-%m-%d") for s in arg]
+            if i+2 < len(tokens) and tokens[i+2].type == TOK.arg:
+                nargs = 2
+            else:
+                nargs = 1
+            for j in range(i+1, i+1+nargs):
+                tokens[j].val = datetime.datetime.strptime(tokens[j].cont, "%Y-%m-%d").date()
         elif tok.type == TOK.newer:
             arg = tokens[i+1].cont
             tokens[i+1].val = predicate._getmtime(arg)
