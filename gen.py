@@ -3,7 +3,20 @@ import os
 import subprocess
 base = os.path.dirname(__file__)
 
-progs = [os.path.splitext(n[2:])[0] for n in os.listdir('mugicli') if re.match('py.*\\.py', n)]
+#progs = [os.path.splitext(n[2:])[0] for n in os.listdir('mugicli') if re.match('py.*\\.py', n)]
+
+progs = []
+src = os.path.join(base, 'mugicli')
+for n in os.listdir(src):
+    p = os.path.join(src, n)
+    if os.path.isdir(p) and n.startswith('py'):
+        progs.append(n[2:])
+    if os.path.isfile(p) and n.startswith('py'):
+        progs.append(os.path.splitext(n)[0][2:])
+
+progs.sort()
+
+#print('progs', progs); exit()
 
 console_scripts = ["'py{} = mugicli.py{}:main',".format(n, n) for n in progs]
 
