@@ -88,7 +88,8 @@ class NodePred:
             TOK.path: predicate.path,
             TOK.ipath: predicate.ipath,
             TOK.mdate: predicate.mdate,
-            TOK.cpptmp: predicate.cpptmp
+            TOK.cpptmp: predicate.cpptmp,
+            TOK.docgrep: predicate.docgrep
         }[type_](name, path, is_dir, arg, val)
 
         if res is None:

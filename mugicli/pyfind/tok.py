@@ -47,7 +47,8 @@ class TOK:
         flush,
         touch,
         cpptmp,
-    ) = range(44)
+        docgrep
+    ) = range(45)
     
 def tok_type_as_string(type):
     for k, v in TOK.__dict__.items():
@@ -102,7 +103,8 @@ TOK_AS_INT = {
     "-print": TOK.print,
     "-touch": TOK.touch,
     "-flush": TOK.flush,
-    "-cpptmp": TOK.cpptmp
+    "-cpptmp": TOK.cpptmp,
+    "-docgrep": TOK.docgrep
 }
 
 TOK_AS_STR = {v:k for k,v in TOK_AS_INT.items()}
@@ -117,4 +119,4 @@ tok_pred_nargs = [TOK.name, TOK.iname, TOK.path, TOK.ipath, TOK.mdate, TOK.cpptm
 
 tok_pred = [TOK.mmin, TOK.name, TOK.iname, TOK.type, TOK.newer, 
     TOK.newerct, TOK.newermt, TOK.mtime, TOK.ctime, TOK.size, TOK.grep, 
-    TOK.igrep, TOK.bgrep, TOK.path, TOK.ipath, TOK.mdate, TOK.cpptmp]
+    TOK.igrep, TOK.bgrep, TOK.path, TOK.ipath, TOK.mdate, TOK.cpptmp, TOK.docgrep]

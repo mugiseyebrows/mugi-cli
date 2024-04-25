@@ -3,6 +3,7 @@ import datetime
 import os
 import fnmatch
 import re
+import zipfile
 
 NOW = datetime.datetime.now()
 
@@ -194,4 +195,22 @@ def cpptmp(name, path, is_dir, arg, val):
         return True
     if name.split(".")[0] in ['object_script', 'Makefile']:
         return True
+    return False
+
+def docgrep(name, path, is_dir, arg, val):
+    if is_dir:
+        return False
+    if os.path.splitext(name)[1].lower() not in ['.odt', '.ods']:
+        return False
+    with zipfile.ZipFile(path) as z:
+        for info in z.infolist():
+            with z.open(info) as f:
+                data = f.read()
+                try:
+                    text = data.decode('utf-8')
+                    m = re.search(arg, text)
+                    if m:
+                        return True
+                except UnicodeDecodeError:
+                    pass
     return False
