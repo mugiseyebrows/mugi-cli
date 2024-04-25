@@ -90,21 +90,47 @@ examples:
 ```
 ## pyecho
 ```
-usage: pyecho [-e] [-n] [args...]
+usage: pyecho [-e] [-n] [--stdout] [args...] [--stderr] [args...]
 
-prints text to stdout
+prints text to stdout and stderr
 
-optional arguments:
--h --help  show this message and exit
--e         decode escape sequences
--n         do not print newline
+options:
+  -h --help  show this message and exit
+  -e         decode escape sequences
+  -n         do not print newline
+  --stdout   print following args to stdout
+  --stderr   print following args to stderr
+
+examples:
+  pyecho hello world
+  pyecho -e "1\n2\n3"
+  pyecho -n test
+  pyecho {1..5}
+  pyecho this goes to stdout --stderr this goes to stderr
+
+
+```
+## pyexec
+```
+usage: pyexec commands
+
+executes one or more commands conditionally
+
+options:
+  -h, --help  show this help message and exit
+
+examples:
+  pyexec "echo 1 && echo 2 || echo 3 && echo 4; pytrue && echo 5; pyfalse && echo 6"
+  pyexec "echo 'some file.txt'; pycat 'some file.txt'"
+  pyexec pytrue "&&" echo {1..3}
+
 
 
 ```
 ## pyextstat
 ```
-usage: pyextstat [-s] [--help] [-h] [--order {s,c,size,count}] [--skip-git]
-                    [-X]
+usage: pyextstat [-s] [--help] [-h] [-o {s,c,size,count}] [--skip-git] [-X]
+                    [--maxdepth MAXDEPTH] [--sample SAMPLE]
                     [path ...]
 
 prints file extension statistics
@@ -116,10 +142,22 @@ options:
   -s, --short           show short list
   --help                show help
   -h, --human-readable  human readable sizes
-  --order {s,c,size,count}
+  -o {s,c,size,count}, --order {s,c,size,count}
                         sort order
   --skip-git
   -X, --xargs           read paths from stdin
+  --maxdepth MAXDEPTH
+  --sample SAMPLE
+
+```
+## pyfalse
+```
+usage: pyfalse [-h]
+
+exits with code 1
+
+options:
+  -h, --help  show this help message and exit
 
 ```
 ## pyfind
@@ -147,6 +185,7 @@ actions:
   -exec                execute command(s)
   -print               print matched paths to output (default action)
   -stat                print matched paths with file size and modification date
+  -touch               touch file (set mtime to current time)
 
 predicates:
   -mtime DAYS          if DAYS is negative: modified within DAYS days, 
@@ -166,8 +205,11 @@ predicates:
   -grep PATTERN        file content contains PATTERN
   -igrep PATTERN       same as -grep but case insensitive
   -bgrep PATTERN       same as -grep but PATTERN is binary expression
+  -docgrep PATTERN     grep odt and ods files for PATTERN
   -type d              is directory
   -type f              is file
+  -cpptmp              temporary cpp files (build artifacts - objects and generated code)
+  
 
 predicates can be inverted using -not, can be grouped together in boolean expressions 
 using -or and -and and parenthesis
@@ -185,12 +227,50 @@ examples:
   pyfind -iname *.cpp *.h -not ( -iname moc_* ui_* )
   pyfind -iname *.h -exec pygrep -H class {} \;
   pyfind -iname *.o -delete
-  pyfind -iname *.py -xargs -exec wc -l \;
+  pyfind -iname *.py -xargs -exec pywc -l \;
   pyfind D:\dev -iname .git -type d -cdup 1
   pyfind -iname *.dll -cdup 1 -abspath | pysetpath -o env.bat
   pyfind -iname *.mp3 -conc 4 -async -exec ffmpeg -i {} {dirname}\{basename}.wav \;
   pyfind -mdate 2023-11-05
+  pyfind -newer path/to/file
 
+
+```
+## pyfor
+```
+
+usage: pyfor [-h] [--help] [-n COUNT] [--list items...] [--glob exprs...] [--sleep SECONDS] 
+  [--at] [-v] [--sep-nl | --sep-sp] [--blank-line] [--] command [args]
+
+optional arguments:
+  -n COUNT               run command COUNT times
+  --list items...        run command for each item in list
+  --glob items...        run command for each path matched by globs
+  -s, --sleep SECONDS    sleep SECONDS after command
+  --at                   print current time and separator before executing command
+  -v, --verbose          print command and separator before executing command
+  --sep-nl               separator is newline
+  --sep-sp               separator is space (default)
+  --blank-line           print blank line after command output
+
+examples:
+  pyfor -n 5 echo hello world :iter:
+  pyfor -n 10 -s 10 --blank-line pyexec tasklist "|" pygrep python
+  pyfor -s 60 --at pynmap example.com -p 80
+  pyfor -s 30 --blank-line pyfind build -mmin -0.1
+  pyfor --list pytrue pyfalse -- pyexec :iter: "&&" echo yeah :iter: "||" echo meh :iter:
+
+runs command(s) n times or forever
+
+
+```
+## pyfree
+```
+usage: pyfree [--help] [-h]
+
+options:
+  --help
+  -h, -g, -G
 
 ```
 ## pygrep
@@ -216,16 +296,21 @@ options:
 ```
 ## pyhead
 ```
-usage: pyhead [-h] [-n N] [path ...]
+usage: pyhead [-h] [-n LINES] [-c BYTES] [-o OFFSET] [-q] [file ...]
 
-prints n lines from head of file
+outputs first n lines (or bytes) of file or stdin
 
 positional arguments:
-  path
+  file
 
 options:
-  -h, --help  show this help message and exit
-  -n N        number of lines to print
+  -h, --help            show this help message and exit
+  -n LINES, --lines LINES
+                        number of lines
+  -c BYTES, --bytes BYTES
+                        number of bytes
+  -o OFFSET, --offset OFFSET
+  -q, --quiet           do not print header
 
 ```
 ## pyiconv
@@ -354,24 +439,23 @@ options:
   -h, --help  show this help message and exit
 
 ```
-## pyrepeat
+## pyprintcmd
 ```
+usage: pyprintcmd [--help] args...
+prints args to stdout as python array
 
-usage: pyrepeat [-h] [--help] [-n COUNT] [-t SECONDS] [--timeout SECONDS] [-v] [--verbose] program
 
-optional arguments:
-  -n COUNT               run command COUNT times
-  -t, --timeout SECONDS  sleep SECONDS between
-  -v, --verbose          print command
-  --newline              print blank line after result
+```
+## pyrandom
+```
+usage: pyrandom [-h] [-w] [-l LENGTH LENGTH] [-n NUMBER] [-s]
 
-examples:
-  pyrepeat -n 100 -t 3 --newline tasklist "|" pyiconv -f cp866 "|" pygrep python
-  pyrepeat -n 100 -t 3 --newline tasklist "|" pyiconv -f cp866 "|" pygrep "g[+][+]|cc1plus|mingw32"
-  pyrepeat -t 30 --newline pyfind build -mmin -0.1
-
-runs command(s) n times or forever
-
+options:
+  -h, --help            show this help message and exit
+  -w, --words
+  -l LENGTH LENGTH, --length LENGTH LENGTH
+  -n NUMBER, --number NUMBER
+  -s, --space
 
 ```
 ## pysed
@@ -552,16 +636,20 @@ options:
 ```
 ## pytail
 ```
-usage: pytail [-h] [-n N] [path ...]
+usage: pytail [-h] [-n LINES] [-c BYTES] [-q] [file ...]
 
-prints n lines from tail of file
+outputs last n lines (or bytes) of file or stdin
 
 positional arguments:
-  path
+  file
 
 options:
-  -h, --help  show this help message and exit
-  -n N        number of lines to print
+  -h, --help            show this help message and exit
+  -n LINES, --lines LINES
+                        number of lines
+  -c BYTES, --bytes BYTES
+                        number of bytes
+  -q, --quiet           do not print header
 
 ```
 ## pytime
@@ -651,6 +739,10 @@ options:
                         include files globs
   -e EXCLUDE [EXCLUDE ...], --exclude EXCLUDE [EXCLUDE ...]
                         include files globs
+
+```
+## pytrue
+```
 
 ```
 ## pyuniq
