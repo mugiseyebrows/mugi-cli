@@ -190,6 +190,9 @@ def format_size(s, w):
         return leftpad("{:.1f}K".format(s / (1024)), w)
     return leftpad(str(s), w)
 
+def format_size_g(s, w):
+    return leftpad("{:.1f}G".format(s / (1024 * 1024 * 1024)), w)
+
 def print_utf8(s, end=b'\n', file=sys.stdout, flush = False):
     if not isinstance(end, bytes):
         end = end.encode('utf-8')

@@ -28,6 +28,7 @@ setup(
             'pyextstat = mugicli.pyextstat:main',
             'pyfalse = mugicli.pyfalse:main',
             'pyfind = mugicli.pyfind:main',
+            'pyfree = mugicli.pyfree:main',
             'pygrep = mugicli.pygrep:main',
             'pyhead = mugicli.pyhead:main',
             'pyiconv = mugicli.pyiconv:main',
