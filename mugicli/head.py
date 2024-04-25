@@ -150,7 +150,7 @@ class LineReader:
                 fout.write(b''.join(lines[-n:]))
 
 def x_main(mode):
-    args = expand_args(remove_double_quotes=False, remove_quote=False)
+    args = expand_args()
     args = conv(args)
     if mode == MODE_HEAD:
         description = 'outputs first n lines (or bytes) of file or stdin'
