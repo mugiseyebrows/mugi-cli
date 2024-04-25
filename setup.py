@@ -8,14 +8,14 @@ with open(readme_path, encoding='utf-8') as f:
 setup(
     packages = find_packages(),
     name = 'mugicli',
-    version='0.0.31',
+    version='0.0.32',
     author="Stanislav Doronin",
     author_email="mugisbrows@gmail.com",
     url='https://github.com/mugiseyebrows/mugi-cli',
     description='Shell utilities resembling coreutils and findutils, small extendable and windows-friendly',
     long_description = long_description,
     long_description_content_type = 'text/markdown',
-    install_requires = ['python-dateutil','bashrange','chardet','walkshort'],
+    install_requires = ['python-dateutil','bashrange','chardet','shortwalk'],
     entry_points={
         'console_scripts': [
             'pycat = mugicli.pycat:main',
