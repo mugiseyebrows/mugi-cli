@@ -83,9 +83,11 @@ predicates:
   -grep PATTERN        file content contains PATTERN
   -igrep PATTERN       same as -grep but case insensitive
   -bgrep PATTERN       same as -grep but PATTERN is binary expression
+  -docgrep PATTERN     grep odt and ods files for PATTERN
   -type d              is directory
   -type f              is file
   -cpptmp              temporary cpp files (build artifacts - objects and generated code)
+  
 
 predicates can be inverted using -not, can be grouped together in boolean expressions 
 using -or and -and and parenthesis
