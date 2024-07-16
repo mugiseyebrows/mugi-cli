@@ -8,7 +8,7 @@ with open(readme_path, encoding='utf-8') as f:
 setup(
     packages = find_packages(),
     name = 'mugicli',
-    version='0.0.32',
+    version='0.0.33',
     author="Stanislav Doronin",
     author_email="mugisbrows@gmail.com",
     url='https://github.com/mugiseyebrows/mugi-cli',
