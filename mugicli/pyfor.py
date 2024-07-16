@@ -3,6 +3,7 @@ from bashrange import expand_args
 import time
 from .shared import run, is_executable
 import glob
+import itertools
 
 def print_help():
     print("""
@@ -50,6 +51,7 @@ def main():
     items = []
     globs = []
     mode = MODE_NONE
+    rt = False
 
     while True:
         if args[i] in ['--help', '-h']:
@@ -73,6 +75,9 @@ def main():
             i += 1
         elif args[i] == '--at':
             at = True
+            i += 1
+        elif args[i] == '--rt':
+            rt = True
             i += 1
         elif args[i] == '--sep-sp':
             sep_sp = True
@@ -118,10 +123,14 @@ def main():
         return res
     
     if mode == MODE_NONE:
-        raise ValueError("Use one of: -n --list --glob")
-
+        #raise ValueError("Use one of: -n --list --glob")
+        mode = MODE_N
+    
     if mode == MODE_N:
-        items = range(count)
+        if count == 0:
+            items = itertools.count()
+        else:
+            items = range(count)
     elif mode == MODE_LIST:
         pass
     elif mode == MODE_GLOB:
@@ -141,7 +150,7 @@ def main():
 
     for item in items:
         end = ' ' if sep_sp else '\n'
-        run(repl_iter(cmd, item), verbose=verbose, at=at, end=end)
+        proc, t = run(repl_iter(cmd, item), verbose=verbose, at=at, end=end)
         if blank_line:
             print(flush=True)
         time.sleep(sleep)

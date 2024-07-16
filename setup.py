@@ -62,6 +62,7 @@ setup(
             'pytrue = mugicli.pytrue:main',
             'pyuniq = mugicli.pyuniq:main',
             'pyunix2dos = mugicli.pyunix2dos:main',
+            'pyuptime = mugicli.pyuptime:main',
             'pywc = mugicli.pywc:main',
             'pyxargs = mugicli.pyxargs:main',
             'pyxxd = mugicli.pyxxd:main',

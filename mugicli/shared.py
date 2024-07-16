@@ -8,6 +8,7 @@ import re
 import locale
 import datetime
 import shutil
+import time
 
 NUM_RX = r'([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?)'
 
@@ -215,7 +216,10 @@ def run(cmd, cwd = None, verbose=False, at=False, end = '\n'):
         print(cmd_join(orig_cmd), end=end, file=sys.stderr)
     if at or verbose:
         print('', end='', flush=True, file=sys.stderr)
-    subprocess.run(cmd, cwd=cwd)
+    t1 = time.time()
+    proc = subprocess.run(cmd, cwd=cwd)
+    t2 = time.time()
+    return proc, t2 - t1
 
 def index_of_int(args):
     for i, arg in enumerate(args):
