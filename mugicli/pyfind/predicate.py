@@ -4,44 +4,16 @@ import os
 import fnmatch
 import re
 import zipfile
+from .types import AddressRange, FloatRange
+from .shared import _getmtime, _getctime, _getsize
+
+try:
+    import xlrd
+    from xlrd.book import Book
+except ImportError:
+    pass
 
 NOW = datetime.datetime.now()
-
-def _unc_path(path):
-    return '\\\\?\\' + path
-
-def _getsize(path, try_unc = True):
-    try:
-        size = os.path.getsize(path)
-        return size
-    except FileNotFoundError as e:
-        if try_unc:
-            path = _unc_path(path)
-            return _getsize(path, False)
-        else:
-            eprint(e)
-
-def _getctime(path, try_unc = True):
-    try:
-        ctime = os.path.getctime(path)
-        return datetime.datetime.fromtimestamp(ctime)
-    except FileNotFoundError as e:
-        if try_unc:
-            path = _unc_path(path)
-            return _getctime(path, False)
-        else:
-            eprint(e)
-
-def _getmtime(path, try_unc = True):
-    try:
-        mtime = os.path.getmtime(path)
-        return datetime.datetime.fromtimestamp(mtime)
-    except FileNotFoundError as e:
-        if try_unc:
-            path = _unc_path(path)
-            return _getmtime(path, False)
-        else:
-            eprint(e)
 
 # =================== <Predicates>
 
@@ -114,12 +86,8 @@ def ctime(name, path, is_dir, arg, val):
 def mtime(name, path, is_dir, arg, val):
     return _xtime(arg, val, _getmtime(path))
 
-def _getmdate(path):
-    d = _getmtime(path)
-    return datetime.date(d.year, d.month, d.day)
-
 def mdate(name, path, is_dir, arg, val):
-    d = _getmdate(path)
+    d = _getmtime(path).date()
     #ds = [datetime.datetime.strptime(s, "%Y-%m-%d") for s in arg]
     ds = val
     if len(ds) == 1:
@@ -195,6 +163,53 @@ def cpptmp(name, path, is_dir, arg, val):
         return True
     if name.split(".")[0] in ['object_script', 'Makefile']:
         return True
+    return False
+
+def xlgrep(name, path, is_dir, arg, val):
+    if is_dir:
+        return False
+    if os.path.splitext(name)[1].lower() not in ['.xls']:
+        return False
+    rngs = [v for v in val if isinstance(v, AddressRange)]
+    txts = [v.lower() for v in val if isinstance(v, str)]
+    ints = [v for v in val if isinstance(v, int)]
+    floats = [v for v in val if isinstance(v, float)]
+    float_ranges = [v for v in val if isinstance(v, FloatRange)]
+
+    try:
+        book: Book = xlrd.open_workbook(path)
+    except xlrd.biffh.XLRDError:
+        return False
+    
+    for i in range(book.nsheets):
+        sh = book.sheet_by_index(i)
+        # todo whole sheet if no range specified
+        for rng in rngs:
+            r1, c1, r2, c2 = rng
+            #print(r1, c1, r2, c2)
+            r2 = min(r2, sh.nrows)
+            c2 = min(c2, sh.ncols)
+            #print(r1, c1, r2, c2)
+            for r in range(r1, r2+1):
+                for c in range(c1, c2+1):
+                    rowx = r - 1
+                    colx = c - 1
+                    v = sh.cell_value(rowx, colx)
+                    if isinstance(v, (int, float)):
+                        if v in ints:
+                            return True
+                        for f in floats + ints:
+                            if abs(f - v) < 1e-4:
+                                return True
+                        for fr in float_ranges:
+                            v1, v2 = fr
+                            if v1 <= v <= v2:
+                                return True
+                    elif isinstance(v, str):
+                        for t in txts:
+                            if t in v.lower():
+                                return True
+                                
     return False
 
 def docgrep(name, path, is_dir, arg, val):

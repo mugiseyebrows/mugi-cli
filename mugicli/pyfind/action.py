@@ -6,6 +6,7 @@ from ..shared import eprint
 import shutil
 import datetime
 from pathlib import Path
+from .shared import _getmtime, _getsize
 
 def cdup_path(path, cdup):
     for i in range(cdup):
@@ -129,10 +130,14 @@ class Printer:
     def print(self, path):
         path_ = path + ("\\" if self._trail and os.path.isdir(path) else "")
         if self._stat:
-            mdate = datetime.datetime.fromtimestamp(os.path.getmtime(path))
-            size = os.path.getsize(path)
+            mdate = _getmtime(path)
+            if mdate:
+                mdate_ = mdate.strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                mdate_ = "????-??-?? ??:??:??"
+            size = _getsize(path)
             text = "{} {:>16} {}".format(
-                mdate.strftime("%Y-%m-%d %H:%M:%S"),
+                mdate_,
                 size,
                 path_
             )

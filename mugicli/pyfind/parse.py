@@ -8,7 +8,8 @@ from .action import ActionPrint, ActionExec, ActionDelete, ActionTouch
 from ..shared import has_magic, glob_paths_dirs
 from .. import parse_size
 import dateutil.parser
-import datetime
+import re
+from .types import parse_address_range, parse_int, parse_float, parse_float_range
 
 @dataclass
 class ExtraArgs:
@@ -68,7 +69,7 @@ def pop_paths(tokens, paths, index):
 def parse_args(args = None):
     if args is None:
         args = sys.argv[1:]
-    tokens = [T(TOK_AS_INT[t], t) if t in TOK_AS_INT else T(TOK.und, t) for t in args]
+    tokens: list[T] = [T(TOK_AS_INT[t], t) if t in TOK_AS_INT else T(TOK.und, t) for t in args]
     for i, tok in enumerate(tokens):
         if tok is None:
             continue
@@ -99,7 +100,7 @@ def parse_args(args = None):
             raise ValueError("Invalid exec expression: semicolon not found")
         ix_tail = ix_semicolon
         if ix_tail < ix_exec:
-            raise ValueError("\; preceedes -exec")
+            raise ValueError("\\; preceedes -exec")
         exec_tokens = tokens[ix_exec+1:ix_tail]
         tokens = tokens[:ix_exec] + tokens[ix_tail+1:]
 
@@ -173,14 +174,44 @@ def parse_args(args = None):
             arg = tokens[i+1].cont
             tokens[i+1].val = float(arg)
         elif tok.type == TOK.mdate:
+            """
             if i+2 < len(tokens) and tokens[i+2].type == TOK.arg:
                 nargs = 2
             else:
                 nargs = 1
+            """
+            nargs = get_nargs(tokens, i)
             for j in range(i+1, i+1+nargs):
-                tokens[j].val = datetime.datetime.strptime(tokens[j].cont, "%Y-%m-%d").date()
+                tokens[j].val = dateutil.parser.parse(tokens[j].cont).date()
         elif tok.type == TOK.newer:
             arg = tokens[i+1].cont
             tokens[i+1].val = predicate._getmtime(arg)
-
+        elif tok.type == TOK.xlgrep:
+            nargs = get_nargs(tokens, i)
+            for j in range(i + 1, i + 1 + nargs):
+                tokens[j].val = parse_xlgrep_arg(tokens[j].cont)
     return tokens, paths, action, extraArgs
+
+
+def parse_xlgrep_arg(s):
+    ar = parse_address_range(s)
+    if ar:
+        return ar
+    i = parse_int(s)
+    if i is not None:
+        return i
+    f = parse_float(s)
+    if f is not None:
+        return f
+    fr = parse_float_range(s)
+    if fr:
+        return fr
+    return s
+
+def get_nargs(tokens: list[T], i):
+    count = 0
+    for j in range(i+1, len(tokens)):
+        if tokens[j].cont.startswith('-'):
+            return count
+        count += 1
+    return count
