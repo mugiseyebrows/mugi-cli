@@ -2,9 +2,9 @@ import sys
 import os
 from dataclasses import dataclass
 
-from .tok import T, TOK, TOK_AS_INT, tok_pred, tok_pred_nargs
+from .tok import T, TOK, TOK_AS_INT, tok_pred, tok_pred_nargs, tok_pred_noargs
 from . import predicate
-from .action import ActionPrint, ActionExec, ActionDelete, ActionTouch
+from .action import ActionPrint, ActionExec, ActionDelete, ActionTouch, ActionGitStatus
 from ..shared import has_magic, glob_paths_dirs
 from .. import parse_size
 import dateutil.parser
@@ -84,7 +84,8 @@ def parse_args(args = None):
                 if tokens[j].cont.startswith('-'):
                     break
                 tokens[j] = T(TOK.arg, tokens[j].cont)
-
+        elif tok.type in tok_pred_noargs:
+            pass
         elif tok.type in tok_pred:
             token = tokens[i+1]
             tokens[i+1] = T(TOK.arg, token.cont)
@@ -136,6 +137,10 @@ def parse_args(args = None):
     touch = pop_named_token(tokens, TOK.touch)
     if touch:
         action = ActionTouch()
+
+    gitstat = pop_named_token(tokens, TOK.gitstat)
+    if gitstat:
+        action = ActionGitStatus()
 
     cdup = pop_named_token_and_value(tokens, TOK.cdup, type=int)
     if cdup is None:

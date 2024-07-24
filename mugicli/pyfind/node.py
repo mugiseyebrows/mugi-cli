@@ -1,5 +1,5 @@
 from . import predicate
-from .tok import T, TOK, TOK_AS_STR, tok_pred, tok_pred_nargs, tok_type_as_string
+from .tok import T, TOK, TOK_AS_STR, tok_pred, tok_pred_nargs, tok_pred_noargs, tok_type_as_string
 
 class NodeOpPar:
     def __repr__(self) -> str:
@@ -90,7 +90,8 @@ class NodePred:
             TOK.mdate: predicate.mdate,
             TOK.cpptmp: predicate.cpptmp,
             TOK.docgrep: predicate.docgrep,
-            TOK.xlgrep: predicate.xlgrep
+            TOK.xlgrep: predicate.xlgrep,
+            TOK.gitdir: predicate.gitdir
         }[type_](name, path, is_dir, arg, val)
 
         if res is None:
@@ -252,9 +253,12 @@ def expr_to_pred(expr):
                         nargs += 1
                     else:
                         break
+            elif expr[i].type in tok_pred_noargs:
+                nargs = 0
             else:
                 nargs = 1
             expr = expr[:head] + [NodePred(expr[head: i+nargs+1])] + expr[i+nargs+1:]
+            
         else:
             break
 

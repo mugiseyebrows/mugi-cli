@@ -40,7 +40,7 @@ def group_tail(tokens):
 """
 
 def print_help():
-    print("""usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-async] [-exec cmd args \\{} \;] [-delete] [-print]
+    print("""usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-async] [-exec cmd args {} ;] [-delete] [-print]
 
 finds files and dirs that satisfy conditions (predicates) and executes action
 
@@ -64,6 +64,7 @@ actions:
   -print               print matched paths to output (default action)
   -stat                print matched paths with file size and modification date
   -touch               touch file (set mtime to current time)
+  -gitstat             print git status summary
 
 predicates:
   -mtime DAYS          if DAYS is negative: modified within DAYS days, 
@@ -87,7 +88,7 @@ predicates:
   -type d              is directory
   -type f              is file
   -cpptmp              temporary cpp files (build artifacts - objects and generated code)
-  
+  -gitdir              directory with .git in it
 
 predicates can be inverted using -not, can be grouped together in boolean expressions 
 using -or and -and and parenthesis
@@ -103,14 +104,17 @@ binds:
 examples:
   pyfind -iname *.py -mmin -10
   pyfind -iname *.cpp *.h -not ( -iname moc_* ui_* )
-  pyfind -iname *.h -exec pygrep -H class {} \;
+  pyfind -iname *.h -exec pygrep -H class {} ;
   pyfind -iname *.o -delete
-  pyfind -iname *.py -xargs -exec pywc -l \;
-  pyfind D:\\dev -iname .git -type d -cdup 1
+  pyfind -iname *.py -xargs -exec pywc -l ;
+  pyfind D:\\dev -iname node_modules -type d -cdup 1
   pyfind -iname *.dll -cdup 1 -abspath | pysetpath -o env.bat
-  pyfind -iname *.mp3 -conc 4 -async -exec ffmpeg -i {} {dirname}\\{basename}.wav \;
-  pyfind -mdate 2023-11-05
+  pyfind -iname *.mp3 -conc 4 -async -exec ffmpeg -i {} {dirname}\\{basename}.wav ;
+  pyfind -mdate 2024-07-25
+  pyfind -mdate 2024-07-25 2024-08-21
   pyfind -newer path/to/file
+  pyfind D:\\dev -maxdepth 2 -gitdir -gitstat
+  pyfind D:\\dev -maxdepth 2 -stat
 """)
 
 async def async_main():

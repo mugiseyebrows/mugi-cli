@@ -7,6 +7,8 @@ import shutil
 import datetime
 from pathlib import Path
 from .shared import _getmtime, _getsize
+import subprocess
+import re
 
 def cdup_path(path, cdup):
     for i in range(cdup):
@@ -171,3 +173,77 @@ class ActionPrint(ActionBase):
             path_ = os.path.relpath(path, os.getcwd())
 
         self._printer.print(path_)
+
+class ActionGitStatus(ActionBase):
+    
+    def exec(self, root, name, path, is_dir):
+        if not is_dir:
+            return
+        if not os.path.isdir(os.path.join(path, '.git')):
+            return
+        
+        git = shutil.which('git')
+        if git is None:
+            git = 'C:\\Program Files\\Git\\cmd\\git.exe'
+            if not os.path.isfile(git):
+                raise ValueError("git not found")
+            
+        if self._abspath:
+            path_ = os.path.realpath(path)
+        elif os.path.isabs(root):
+            path_ = path
+        else:
+            path_ = os.path.relpath(path, os.getcwd())
+
+        lines = subprocess.check_output([git, 'status'], cwd=path).decode('utf-8').split('\n')
+
+        (SEC_PRE, SEC_CHANGED, SEC_STAGED, SEC_UNMERGED, SEC_UNTRACKED) = range(5)
+
+        sec = SEC_PRE
+        
+        not_staged = 0
+        untracked = 0
+        staged = 0
+        unmerged = 0
+
+        for line in lines:
+            if line.startswith('Changes not staged for commit:'):
+                sec = SEC_CHANGED
+                continue
+            if line.startswith('Untracked files:'):
+                sec = SEC_UNTRACKED
+                continue
+            if line.startswith('Changes to be committed:'):
+                sec = SEC_STAGED
+                continue
+            if line.startswith('Unmerged paths:'):
+                sec = SEC_UNMERGED
+                continue
+
+            if sec == SEC_CHANGED:
+                if re.match('\\s+(new file|modified|deleted)', line):
+                    not_staged += 1
+                    continue
+            elif sec == SEC_UNTRACKED:
+                if line.startswith('no changes added to commit'):
+                    continue
+                if line.strip() == '':
+                    continue
+                untracked += 1
+            elif sec == SEC_UNMERGED:
+                if line.strip() == '':
+                    continue
+                unmerged += 1
+            elif sec == SEC_STAGED:
+                if re.match('\\s+(new file|modified|deleted)', line):
+                    staged += 1
+                    continue
+
+
+        print("{:>3} cha {:>3} sta {:>3} unm {:>3} unt   {}".format(not_staged, staged, unmerged, untracked, path_))
+        
+
+            
+
+
+        

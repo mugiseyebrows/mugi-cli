@@ -165,6 +165,11 @@ def cpptmp(name, path, is_dir, arg, val):
         return True
     return False
 
+def gitdir(name, path, is_dir, arg, val):
+    if not is_dir:
+        return False
+    return os.path.isdir(os.path.join(path, '.git'))
+
 def xlgrep(name, path, is_dir, arg, val):
     if is_dir:
         return False
