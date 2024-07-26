@@ -160,82 +160,6 @@ options:
   -h, --help  show this help message and exit
 
 ```
-## pyfind
-```
-usage: pyfind [PATHS] [OPTIONS] [CONDITIONS] [-async] [-exec cmd args \{} \;] [-delete] [-print]
-
-finds files and dirs that satisfy conditions (predicates) and executes action
-
-options:
-  -maxdepth NUMBER     walk no deeper than NUMBER levels
-  -output PATH         output to file instead of stdout
-  -append              append to file instead of rewrite
-  -abspath             print absolute paths
-  -async               execute asyncronously (do not wait for termination)
-  -conc NUMBER         concurrency limit for -async -exec, 
-                       defaults to number of cpu cores
-  -trail               print trailing slash on directories
-  -cdup NUMBER         print (or perform action on) parent path (strip NUMBER 
-                       trailing components from path)
-  -first NUMBER        print (or perform action on) first NUMBER found items and stop
-  -xargs               execute command once with all matched files as arguments
-
-actions:
-  -delete              delete matched file
-  -exec                execute command(s)
-  -print               print matched paths to output (default action)
-  -stat                print matched paths with file size and modification date
-  -touch               touch file (set mtime to current time)
-
-predicates:
-  -mtime DAYS          if DAYS is negative: modified within DAYS days, 
-                       if positive modified more than DAYS days ago
-  -ctime DAYS          same as -mtime, but when modified metadata not content
-  -mmin MINUTES        if MINUTES is negative: modified within MINUTES minutes, 
-                       if positive modified more than MINUTES minutes ago
-  -mdate DATE1 [DATE2] modified at DATE1 (or between DATE1 and DATE2)
-  -cmin MINUTES        same as -mmin, but when modified metadata not content
-  -newer PATH/TO/FILE  modified later than PATH/TO/FILE
-  -newermt DATETIME    modified later than DATETIME
-  -newerct DATETIME    same as -newermt but when modified metadata not content
-  -name PATTERN        filename matches PATTERN (wildcard)
-  -iname PATTERN       same as -name but case insensitive
-  -path PATTERN        file path matches PATTERN
-  -ipath PATTERN       same as -path but case insensitive
-  -grep PATTERN        file content contains PATTERN
-  -igrep PATTERN       same as -grep but case insensitive
-  -bgrep PATTERN       same as -grep but PATTERN is binary expression
-  -docgrep PATTERN     grep odt and ods files for PATTERN
-  -type d              is directory
-  -type f              is file
-  -cpptmp              temporary cpp files (build artifacts - objects and generated code)
-  
-
-predicates can be inverted using -not, can be grouped together in boolean expressions 
-using -or and -and and parenthesis
-
-binds:
-  {}          path to file
-  {path}      path to file
-  {name}      name with extension
-  {ext}       extension
-  {basename}  name without extension
-  {dirname}   directory name
-
-examples:
-  pyfind -iname *.py -mmin -10
-  pyfind -iname *.cpp *.h -not ( -iname moc_* ui_* )
-  pyfind -iname *.h -exec pygrep -H class {} \;
-  pyfind -iname *.o -delete
-  pyfind -iname *.py -xargs -exec pywc -l \;
-  pyfind D:\dev -iname .git -type d -cdup 1
-  pyfind -iname *.dll -cdup 1 -abspath | pysetpath -o env.bat
-  pyfind -iname *.mp3 -conc 4 -async -exec ffmpeg -i {} {dirname}\{basename}.wav \;
-  pyfind -mdate 2023-11-05
-  pyfind -newer path/to/file
-
-
-```
 ## pyfor
 ```
 
@@ -774,6 +698,17 @@ options:
   -h, --help  show this help message and exit
 
 ```
+## pyuptime
+```
+usage: pyuptime [-h] [-p]
+
+prints uptime information
+
+options:
+  -h, --help    show this help message and exit
+  -p, --pretty  pretty print
+
+```
 ## pywc
 ```
 usage: pywc [-h] [-l] [-w] [-m] [-c] [--input INPUT] [-X] [path ...]
@@ -868,8 +803,13 @@ options:
 
 ```
 # Notes
-## Escaping
 
-Windows shell (cmd) doesn't expand wildcards so you dont need to put them in quotes, also you dont need to escape parenthesis. Escape symbol for special chars is ^, not \
+Windows shell (cmd) doesn't expand wildcards so you dont need to put them in quotes, also you dont need to escape parenthesis and semicolon. Escape symbol for special chars is ^, not \
 
 /dev/null windows alternative is NUL
+
+# See also
+
+[https://github.com/mugiseyebrows/pyfindlib](https://github.com/mugiseyebrows/pyfindlib)
+
+

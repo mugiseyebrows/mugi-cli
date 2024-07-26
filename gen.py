@@ -62,5 +62,4 @@ with open(path, 'w', encoding='utf-8') as f:
 
         f.write(cont)
         f.write('```\n')
-    f.write("# Notes\n")
-    f.write(data['escaping'])
+    f.write(data['notes'])
