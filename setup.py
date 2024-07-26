@@ -12,7 +12,7 @@ setup(
     author="Stanislav Doronin",
     author_email="mugisbrows@gmail.com",
     url='https://github.com/mugiseyebrows/mugi-cli',
-    description='Shell utilities resembling coreutils and findutils, small extendable and windows-friendly',
+    description='Shell utilities resembling coreutils, small, extendable and windows-friendly',
     long_description = long_description,
     long_description_content_type = 'text/markdown',
     install_requires = ['python-dateutil','bashrange','chardet','shortwalk'],
