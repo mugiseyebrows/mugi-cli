@@ -190,8 +190,19 @@ def parse_args(args = None):
             nargs = get_nargs(tokens, i)
             for j in range(i + 1, i + 1 + nargs):
                 tokens[j].val = parse_xlgrep_arg(tokens[j].cont)
+        elif tok.type == TOK.bgrep:
+            tokens[i+1].val = parse_bgrep_arg(tokens[i+1].cont)
+            
     return tokens, paths, action, extraArgs
 
+def hex_parse(s):
+    res = []
+    for i in range(0, len(s), 2):
+        res.append(int(s[i:i+2], 16))
+    return bytes(res)
+
+def parse_bgrep_arg(arg: str):
+    return hex_parse(re.sub('\\s+','', arg))
 
 def parse_xlgrep_arg(s):
     ar = parse_address_range(s)

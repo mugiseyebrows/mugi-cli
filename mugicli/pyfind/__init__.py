@@ -78,10 +78,10 @@ predicates:
   -newer PATH/TO/FILE  modified later than PATH/TO/FILE
   -newermt DATETIME    modified later than DATETIME
   -newerct DATETIME    same as -newermt but when modified metadata not content
-  -name PATTERN        filename matches PATTERN (wildcard)
-  -iname PATTERN       same as -name but case insensitive
-  -path PATTERN        file path matches PATTERN
-  -ipath PATTERN       same as -path but case insensitive
+  -name PATTERNS        filename matches PATTERN (wildcard)
+  -iname PATTERNS       same as -name but case insensitive
+  -path PATTERNS        file path matches PATTERN
+  -ipath PATTERNS       same as -path but case insensitive
   -grep PATTERN        file content contains PATTERN
   -igrep PATTERN       same as -grep but case insensitive
   -bgrep PATTERN       same as -grep but PATTERN is binary expression
@@ -116,6 +116,7 @@ examples:
   pyfind -newer path/to/file
   pyfind D:\\dev -maxdepth 2 -gitdir -gitstat
   pyfind D:\\dev -maxdepth 2 -stat
+  pyfind C:\\Qt\\6.7.1 -iname *.dll -bgrep "55 71 fe ff"
 """)
 
 async def async_main():

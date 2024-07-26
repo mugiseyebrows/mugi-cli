@@ -106,38 +106,24 @@ def size(name, path, is_dir, arg, val):
         return size_path < abs(size_arg)
     return size_path > size_arg
 
-def _xgrep(name, path, is_dir, arg, flags, bin, try_unc = True):
+def _xgrep(name, path, is_dir, arg, flags, try_unc = True):
     if is_dir:
         return None
     try:
-        if bin:
-            # todo buffered read for big files
-            try:
-                with open(path, 'rb') as f:
-                    data = f.read()
-                arg = arg.encode("utf-8").decode('unicode_escape').encode('utf-8')
-                return arg in data
-            except FileNotFoundError as e:
-                if try_unc:
-                    return _xgrep(name, path, is_dir, arg, flags, bin, False)
-                else:
-                    eprint(e)
+        with open(path, encoding='utf-8') as f:
+            text = f.read()
+        return re.search(arg, text, flags) is not None
+    except FileNotFoundError as e:
+        if try_unc:
+            return _xgrep(name, path, is_dir, arg, flags, False)
         else:
-            try:
-                with open(path, encoding='utf-8') as f:
-                    text = f.read()
-                return re.search(arg, text, flags) is not None
-            except FileNotFoundError as e:
-                if try_unc:
-                    return _xgrep(name, path, is_dir, arg, flags, bin, False)
-                else:
-                    eprint(e)
-            except UnicodeDecodeError as e:
-                #print("UnicodeDecodeError", e, path)
-                pass
-            except UnicodeEncodeError as e:
-                #print("UnicodeEncodeError", e)
-                pass
+            eprint(e)
+    except UnicodeDecodeError as e:
+        #print("UnicodeDecodeError", e, path)
+        pass
+    except UnicodeEncodeError as e:
+        #print("UnicodeEncodeError", e)
+        pass
 
     except Exception as e:
         eprint(e)
@@ -149,12 +135,24 @@ def grep(name, path, is_dir, arg, val):
 def igrep(name, path, is_dir, arg, val):
     return _xgrep(name, path, is_dir, arg, re.IGNORECASE, False)
 
-def bgrep(name, path, is_dir, arg, val):
-    return _xgrep(name, path, is_dir, arg, 0, True)
+def bgrep(name, path, is_dir, arg, val, try_unc = True):
+    # todo buffered read for big files
+    #print("val", val)
+    if is_dir:
+        return None
+    try:
+        with open(path, 'rb') as f:
+            data = f.read()
+        return val in data
+    except FileNotFoundError as e:
+        if try_unc:
+            return bgrep(name, path, is_dir, arg, val, False)
+        else:
+            eprint(e)
 
 def cpptmp(name, path, is_dir, arg, val):
     if is_dir:
-        return False
+        return None
     if os.path.splitext(name)[1].lower() in ['.o', '.obj']:
         return True
     if re.match('^ui_.*[.]h$', name):
@@ -167,14 +165,14 @@ def cpptmp(name, path, is_dir, arg, val):
 
 def gitdir(name, path, is_dir, arg, val):
     if not is_dir:
-        return False
+        return None
     return os.path.isdir(os.path.join(path, '.git'))
 
 def xlgrep(name, path, is_dir, arg, val):
     if is_dir:
-        return False
+        return None
     if os.path.splitext(name)[1].lower() not in ['.xls']:
-        return False
+        return None
     rngs = [v for v in val if isinstance(v, AddressRange)]
     txts = [v.lower() for v in val if isinstance(v, str)]
     ints = [v for v in val if isinstance(v, int)]
@@ -219,7 +217,7 @@ def xlgrep(name, path, is_dir, arg, val):
 
 def docgrep(name, path, is_dir, arg, val):
     if is_dir:
-        return False
+        return None
     if os.path.splitext(name)[1].lower() not in ['.odt', '.ods']:
         return False
     with zipfile.ZipFile(path) as z:
