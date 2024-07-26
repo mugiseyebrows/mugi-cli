@@ -146,9 +146,12 @@ def main():
         for f in files:
             if include_exclude(args.include, args.exclude, f):
                 tree.add(root, f)
-        for d in dirs:
-            tree.add(root, d)
-
+        for d in list(dirs):
+            if d in args.exclude:
+                dirs.remove(d)
+            else:
+                tree.add(root, d)
+            
     print_utf8(tree.to_str())
 
 if __name__ == "__main__":
