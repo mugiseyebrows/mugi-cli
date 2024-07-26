@@ -1,5 +1,6 @@
 from . import predicate
 from .tok import T, TOK, TOK_AS_STR, tok_pred, tok_pred_nargs, tok_pred_noargs, tok_type_as_string
+from .types import Pred
 
 class NodeOpPar:
     def __repr__(self) -> str:
@@ -123,6 +124,9 @@ class NodeGroupAnd:
     def __repr__(self):
         return "NodeGroupAnd({})".format(repr(self._children))
 
+class NodeGroup:
+    pass
+
 class NodeGroupOr:
     def __init__(self, nodes):
         self._children = normalize(nodes)
@@ -236,7 +240,7 @@ def find_level(tree, level):
         return None, None
     return ix_op, ix_cl + 1
 
-def expr_to_pred(expr):
+def expr_to_pred(expr) -> tuple[NodeGroup, Pred]:
 
     while True:
         i = pred_token_index(expr)
@@ -286,7 +290,7 @@ def expr_to_pred(expr):
             tree.append((tok, level))
 
     if len(tree) == 0:
-        return tree, lambda name, path, is_dir: True
+        return None, lambda name, path, is_dir: True
     
     while (True):
         level = max_level(tree)

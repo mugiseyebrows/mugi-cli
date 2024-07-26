@@ -9,6 +9,7 @@ from pathlib import Path
 from .shared import _getmtime, _getsize
 import subprocess
 import re
+from .types import Exec
 
 def cdup_path(path, cdup):
     for i in range(cdup):
@@ -29,6 +30,9 @@ class ActionBase:
     def setOptions(self, cdup, abspath):
         self._cdup = cdup
         self._abspath = abspath
+
+    def exec(self, root, name, path, is_dir):
+        pass
 
     async def wait(self):
         pass
@@ -243,7 +247,13 @@ class ActionGitStatus(ActionBase):
         print("{:>3} cha {:>3} sta {:>3} unm {:>3} unt   {}".format(not_staged, staged, unmerged, untracked, path_))
         
 
-            
 
 
+class ActionCallback(ActionBase):
+    def __init__(self, callback: Exec):
+        self._callback = callback
+
+    def exec(self, root, name, path, is_dir):
+        self._callback(root, name, path, is_dir)
+    
         

@@ -4,6 +4,7 @@ from bashrange import expand_args
 import asyncio
 from .parse import parse_args
 from .node import expr_to_pred
+from .alg import walk_all
 
 """
 def to_int(v):
@@ -139,33 +140,8 @@ async def async_main():
 
     if len(paths) == 0:
         paths.append(".")
-
-    def walk_all():
-        executed = 0
-
-        if extraArgs.first is not None:
-            need_to_stop = lambda: executed >= extraArgs.first
-        else:
-            need_to_stop = lambda: False
-
-        for path in paths:
-            for root, dirs, files in walk(path, maxdepth=extraArgs.maxdepth):
-                for name in dirs:
-                    p = os.path.join(root, name)
-                    if pred(name, p, True):
-                        action.exec(path, name, p, True)
-                        executed += 1
-                        if need_to_stop():
-                            return
-                for name in files:
-                    p = os.path.join(root, name)
-                    if pred(name, p, False):
-                        action.exec(path, name, p, False)
-                        executed += 1
-                        if need_to_stop():
-                            return
     
-    walk_all()
+    walk_all(paths, pred, action, extraArgs)
 
     await action.wait()
 

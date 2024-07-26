@@ -9,12 +9,7 @@ from ..shared import has_magic, glob_paths_dirs
 from .. import parse_size
 import dateutil.parser
 import re
-from .types import parse_address_range, parse_int, parse_float, parse_float_range
-
-@dataclass
-class ExtraArgs:
-    maxdepth: int
-    first: int
+from .types import parse_address_range, parse_int, parse_float, parse_float_range, ExtraArgs, Pred
 
 def last_und_index(tokens, i):
     index = None

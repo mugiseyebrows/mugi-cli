@@ -1,5 +1,7 @@
-
 from collections import namedtuple
+from dataclasses import dataclass
+from collections.abc import Callable
+
 import re
 try:
     from openpyxl.utils import column_index_from_string
@@ -44,3 +46,12 @@ def parse_float_range(s):
         return FloatRange(v1, v2)
     except ValueError:
         pass
+
+@dataclass
+class ExtraArgs:
+    maxdepth: int
+    first: int
+
+Pred = Callable[[str, str, bool], bool]
+
+Exec = Callable[[str, str, str, bool], None]
