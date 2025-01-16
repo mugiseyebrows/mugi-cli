@@ -170,10 +170,7 @@ def x_main(mode):
         args.offset = 0
 
     if args.lines is None and args.bytes is None:
-        raise ValueError("pass -n or -c")
-    
-    if args.lines is not None and args.bytes is not None:
-        raise ValueError("pass only one: -n or -c")
+        args.lines = 10
 
     if len(args.file) > 0:
         # files mode
