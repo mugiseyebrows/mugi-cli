@@ -206,16 +206,19 @@ def cmd_join(cmd):
         res.append(e)
     return " ".join(res)
 
-def run(cmd, cwd = None, verbose=False, at=False, end = '\n'):
+def run(cmd, cwd = None, verbose=False, print_date=False, print_time=False, end = '\n'):
     orig_cmd = cmd
     cmd = adjust_command(cmd)
-    if at:
+    if print_date or print_time:
         now = datetime.datetime.now()
-        print(now.strftime('%Y-%m-%d %H:%M:%S'), end=end, file=sys.stderr)
+    if print_date:
+        print(now.strftime('%Y-%m-%d'), end=end, file=sys.stderr)
+    if print_time:
+        print(now.strftime('%H:%M:%S'), end=end, file=sys.stderr)
     if verbose:
         print(cmd_join(orig_cmd), end=end, file=sys.stderr)
-    if at or verbose:
-        print('', end='', flush=True, file=sys.stderr)
+    if print_date or print_time or verbose:
+        print(flush=True, file=sys.stderr)
     t1 = time.time()
     proc = subprocess.run(cmd, cwd=cwd)
     t2 = time.time()

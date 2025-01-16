@@ -4,29 +4,32 @@ import time
 from .shared import run, is_executable
 import glob
 import itertools
+import sys
+import re
 
 def print_help():
     print("""
 usage: pyfor [-h] [--help] [-n COUNT] [--list items...] [--glob exprs...] [--sleep SECONDS] 
-  [--at] [-v] [--sep-nl | --sep-sp] [--blank-line] [--] command [args]
+  [--print-time] [-v] [--newline] -- command [args]
 
 optional arguments:
   -n COUNT               run command COUNT times
   --list items...        run command for each item in list
   --glob items...        run command for each path matched by globs
   -s, --sleep SECONDS    sleep SECONDS after command
-  --at                   print current time and separator before executing command
+  --print-date --pd      print current date before executing command
+  --print-time --pt      print current time before executing command
   -v, --verbose          print command and separator before executing command
-  --sep-nl               separator is newline
-  --sep-sp               separator is space (default)
-  --blank-line           print blank line after command output
+  --newline --nl         print blank line after command output
+  --stat --st            print stat
 
 examples:
-  pyfor -n 5 echo hello world :iter:
-  pyfor -n 10 -s 10 --blank-line pyexec tasklist "|" pygrep python
-  pyfor -s 60 --at pynmap example.com -p 80
-  pyfor -s 30 --blank-line pyfind build -mmin -0.1
-  pyfor --list pytrue pyfalse -- pyexec :iter: "&&" echo yeah :iter: "||" echo meh :iter:
+  pyfor -n 5 echo :iter:
+  pyfor -n 1..5 -- echo :iter:
+  pyfor -n 10 -s 10 --newline cmd /c "tasklist | pygrep python"
+  pyfor -s 60 --print-time pynmap example.com -p 80
+  pyfor -s 30 --newline pyfind build -mmin -0.1
+  pyfor --list pytrue pyfalse -- cmd /c ":iter: && echo yeah :iter: || echo meh :iter:"
 
 runs command(s) n times or forever
 """)
@@ -40,66 +43,66 @@ runs command(s) n times or forever
 
 def main():
     args = expand_args()
-    i = 0
-
-    count = 0
+    
     sleep = 0
     verbose = False
-    sep_sp = True
-    blank_line = False
-    at = False
-    items = []
+    newline = False
+    print_date = False
+    print_time = False
+    items = itertools.count()
     globs = []
     mode = MODE_NONE
-    rt = False
+    print_stat = False
 
+    i = 0
     while True:
         if args[i] in ['--help', '-h']:
             print_help()
             exit(0)
-        elif args[i] in ['-n']:
-            count = int(args[i+1])
+        elif args[i] in ['-n', '-r', '--range', '-rn']:
+            mode = MODE_N
+            arg = args[i+1]
             i += 2
-            if mode == MODE_NONE:
-                mode = MODE_N
-            else:
-                raise ValueError("Use only one of: -n --list --glob")
-        elif args[i] in ['-s', '--sleep']:
+            m = re.match('([0-9]+)\\.\\.([0-9]+)\\.\\.([0-9]+)', arg)
+            if m:
+                v1, v2, v3 = [int(m.group(i)) for i in range(1,4)]
+                items = range(v1, v2+1, v3)
+                continue
+            m = re.match('([0-9]+)\\.\\.([0-9]+)', arg)
+            if m:
+                v1, v2 = [int(m.group(i)) for i in range(1,3)]
+                items = range(v1, v2+1)
+                continue
+            items = range(int(arg))
+        elif args[i] in ['-s', '--sleep', '-sleep']:
             sleep = float(args[i+1])
             i += 2
         elif args[i] in ['-v', '--verbose']:
             verbose = True
             i += 1
-        elif args[i] in ['--blank-line']:
-            blank_line = True
+        elif args[i] in ['--newline', '--nl', '-nl']:
+            newline = True
             i += 1
-        elif args[i] == '--at':
-            at = True
+        elif args[i] in ['--print-time', '--pt', '-pt']:
+            print_time = True
+            i += 1
+        elif args[i] in ['--print-date', '--pd', '-pd']:
+            print_date = True
+            i += 1
+        elif args[i] in ['--stat', '--st', '-st']:
+            print_stat = True
             i += 1
         elif args[i] == '--rt':
             rt = True
             i += 1
-        elif args[i] == '--sep-sp':
-            sep_sp = True
-            i += 1
-        elif args[i] == '--sep-nl':
-            sep_sp = False
-            i += 1
         elif args[i] == '--list':
             i += 1
-            if mode == MODE_NONE:
-                mode = MODE_LIST
-            else:
-                raise ValueError("Use only one of: -n --list --glob")
+            items = []
             while not args[i].startswith('-'):
                 items.append(args[i])
                 i += 1
         elif args[i] == '--glob':
             i += 1
-            if mode == MODE_NONE:
-                mode = MODE_GLOB
-            else:
-                raise ValueError("Use only one of: -n --list --glob")
             while not args[i].startswith('-'):
                 globs.append(args[i])
                 i += 1
@@ -123,14 +126,10 @@ def main():
         return res
     
     if mode == MODE_NONE:
-        #raise ValueError("Use one of: -n --list --glob")
         mode = MODE_N
     
     if mode == MODE_N:
-        if count == 0:
-            items = itertools.count()
-        else:
-            items = range(count)
+        pass
     elif mode == MODE_LIST:
         pass
     elif mode == MODE_GLOB:
@@ -149,10 +148,12 @@ def main():
             raise ValueError("{} is not an executable".format(cmd0))
 
     for item in items:
-        end = ' ' if sep_sp else '\n'
-        proc, t = run(repl_iter(cmd, item), verbose=verbose, at=at, end=end)
-        if blank_line:
+        end = ' '
+        proc, t = run(repl_iter(cmd, item), verbose=verbose, print_date=print_date, print_time=print_time, end=end)
+        if newline:
             print(flush=True)
+        if print_stat:
+            print("{:.3f} s".format(t), file=sys.stderr)
         time.sleep(sleep)
 
 if __name__ == "__main__":
