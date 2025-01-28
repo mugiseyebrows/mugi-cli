@@ -261,7 +261,7 @@ def unquote(s):
 # DEBUG_MUGICLI=1
 # DEBUG_MUGICLI=0
 if os.environ.get('DEBUG_MUGICLI') == "1":
-    debug_print = print
+    debug_print = lambda *args, **kwargs: print(*args, **kwargs, file=sys.stderr)
 else:
     debug_print = lambda *args, **kwargs: None
 
