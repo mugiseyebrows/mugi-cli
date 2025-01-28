@@ -1,3 +1,4 @@
-from .head import tail_main as main
+from .headtail import read_tail_lines, read_tail_chars, main
+
 if __name__ == "__main__":
-    main()
+    main(read_tail_lines, read_tail_chars)
