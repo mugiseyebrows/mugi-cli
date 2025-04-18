@@ -110,7 +110,7 @@ def read_tail_chars(f, num, seekable):
                     blocks.pop(0)
         return b''.join(blocks)[-num:]
         
-def main(read_lines, read_chars):
+def app(read_lines, read_chars):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', type=int)
